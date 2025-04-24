@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jzh7/astragen/gd2csv"
+	"github.com/jzh7/astragen/config"
 	"github.com/jzh7/astragen/parsing"
+	"github.com/mejzh77/astragen/gd2csv"
 	"golang.org/x/exp/slices"
 )
 
