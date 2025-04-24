@@ -1,0 +1,68 @@
+id,Название,Изделие,Ссылка
+1,AstraLinux SE (Смоленск) 1.7.4,ТШ-03,
+2,Microsoft Windows 11,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Microsoft\Windows 11\
+3,ПТК AstraIDE v1.7.1.0,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2023.12.28.0\00 Astra.IDE
+4,Плагин AstraRegul,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2023.12.28.0\02 Плагин AstraRegul
+5,Astra.AStudio ,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.AStudio\astra.astudio-x64-1.5.1+b1.r104591
+6,Astra.Domain,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Domain
+7,Astra.Historian,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Historian
+8,Astra.HMI,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI
+9,Astra.HMI.Alarms,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Alarms
+10,Astra.HMI.Charts,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Charts
+11,Astra.HMI.CommonLib,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.CommonLib
+12,Astra.HMI.Explorer,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Explorer
+13,Astra.HMI.IntegrityControl,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.IntegrityControl
+14,Astra.HMI.Tables,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Tables
+15,Astra.HMI.Trends,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Trends
+16,Astra.Security,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Security
+17,Astra.Server,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Server
+18,Astra.Statistics,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Statistics
+19,Astra.Tools,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Tools
+20,Astra.Licensing,АРМ ГП12,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Licensing
+21,Библиотека PsBase для Astra.IDE,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+22,Библиотека PsDiagn для Astra.IDE,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+23,Библиотека PsTechEE для Astra.IDE,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+24,Microsoft Windows 11,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Microsoft\Windows 11\
+25,ПТК AstraIDE v1.7.1.0,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2023.12.28.0\00 Astra.IDE
+26,Плагин AstraRegul,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2023.12.28.0\02 Плагин AstraRegul
+27,Astra.AStudio ,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.AStudio\astra.astudio-x64-1.5.1+b1.r104591
+28,Astra.Domain,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Domain
+29,Astra.Historian,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Historian
+30,Astra.HMI,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI
+31,Astra.HMI.Alarms,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Alarms
+32,Astra.HMI.Charts,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Charts
+33,Astra.HMI.CommonLib,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.CommonLib
+34,Astra.HMI.Explorer,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Explorer
+35,Astra.HMI.IntegrityControl,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.IntegrityControl
+36,Astra.HMI.Tables,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Tables
+37,Astra.HMI.Trends,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Trends
+38,Astra.Security,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Security
+39,Astra.Server,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Server
+40,Astra.Statistics,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Statistics
+41,Astra.Tools,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Tools
+42,Astra.Licensing,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Licensing
+43,Библиотека PsBase для Astra.IDE,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+44,Библиотека PsDiagn для Astra.IDE,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+45,Библиотека PsTechEE для Astra.IDE,АРМ ГП7,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+46,Microsoft Windows 11,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Microsoft\Windows 11\
+47,ПТК AstraIDE v1.7.1.0,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2023.12.28.0\00 Astra.IDE
+48,Плагин AstraRegul,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2023.12.28.0\02 Плагин AstraRegul
+49,Astra.AStudio ,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.AStudio\astra.astudio-x64-1.5.1+b1.r104591
+50,Astra.Domain,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Domain
+51,Astra.Historian,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Historian
+52,Astra.HMI,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI
+53,Astra.HMI.Alarms,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Alarms
+54,Astra.HMI.Charts,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Charts
+55,Astra.HMI.CommonLib,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.CommonLib
+56,Astra.HMI.Explorer,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Explorer
+57,Astra.HMI.IntegrityControl,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.IntegrityControl
+58,Astra.HMI.Tables,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Tables
+59,Astra.HMI.Trends,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.HMI.Trends
+60,Astra.Security,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Security
+61,Astra.Server,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Server
+62,Astra.Statistics,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Statistics
+63,Astra.Tools,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Tools
+64,Astra.Licensing,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\00 ПТК Windows\2024.03.20.0\Astra.Licensing
+65,Библиотека PsBase для Astra.IDE,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+66,Библиотека PsDiagn для Astra.IDE,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки
+67,Библиотека PsTechEE для Astra.IDE,АРМ ГП3,\\advengaNAS\FS\03 Дистрибутивы\Прософт\REGLAB\09 Библиотеки

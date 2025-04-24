@@ -1,0 +1,320 @@
+LT_5L1_YMIN,MODBUS TCP/IP,4x,1001,Значение MIN (для пересчета)
+LT_5L1_YMAX,MODBUS TCP/IP,4x,1003,Значение MAX (для пересчета)
+LT_5L1_BREAK_TLD,MODBUS TCP/IP,4x,1005,Порог обрыва
+LT_5L1_TF,MODBUS TCP/IP,4x,1007,Постоянная времени фильтра
+LT_5L1_AH,MODBUS TCP/IP,4x,1009,Уставка верхняя аварийная
+LT_5L1_WH,MODBUS TCP/IP,4x,1011,Уставка верхняя предупредительная
+LT_5L1_WL,MODBUS TCP/IP,4x,1013,Уставка нижняя предупредительная
+LT_5L1_AL,MODBUS TCP/IP,4x,1015,Уставка нижняя аварийная 
+LT_5L1_MAN_VALUE,MODBUS TCP/IP,4x,1017,Значение в режиме эмитации 
+LT_5L1_MAN_ON,MODBUS TCP/IP,4x_Bit,1019.0,Включен режим эмитации
+LZT_5L10_1_YMIN,MODBUS TCP/IP,4x,1020,Значение MIN (для пересчета)
+LZT_5L10_1_YMAX,MODBUS TCP/IP,4x,1022,Значение MAX (для пересчета)
+LZT_5L10_1_BREAK_TLD,MODBUS TCP/IP,4x,1024,Порог обрыва
+LZT_5L10_1_TF,MODBUS TCP/IP,4x,1026,Постоянная времени фильтра
+LZT_5L10_1_AH,MODBUS TCP/IP,4x,1028,Уставка верхняя аварийная
+LZT_5L10_1_WH,MODBUS TCP/IP,4x,1030,Уставка верхняя предупредительная
+LZT_5L10_1_WL,MODBUS TCP/IP,4x,1032,Уставка нижняя предупредительная
+LZT_5L10_1_AL,MODBUS TCP/IP,4x,1034,Уставка нижняя аварийная 
+LZT_5L10_1_MAN_VALUE,MODBUS TCP/IP,4x,1036,Значение в режиме эмитации 
+LZT_5L10_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1038.0,Включен режим эмитации
+LZT_5L10_2_YMIN,MODBUS TCP/IP,4x,1039,Значение MIN (для пересчета)
+LZT_5L10_2_YMAX,MODBUS TCP/IP,4x,1041,Значение MAX (для пересчета)
+LZT_5L10_2_BREAK_TLD,MODBUS TCP/IP,4x,1043,Порог обрыва
+LZT_5L10_2_TF,MODBUS TCP/IP,4x,1045,Постоянная времени фильтра
+LZT_5L10_2_AH,MODBUS TCP/IP,4x,1047,Уставка верхняя аварийная
+LZT_5L10_2_WH,MODBUS TCP/IP,4x,1049,Уставка верхняя предупредительная
+LZT_5L10_2_WL,MODBUS TCP/IP,4x,1051,Уставка нижняя предупредительная
+LZT_5L10_2_AL,MODBUS TCP/IP,4x,1053,Уставка нижняя аварийная 
+LZT_5L10_2_MAN_VALUE,MODBUS TCP/IP,4x,1055,Значение в режиме эмитации 
+LZT_5L10_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1057.0,Включен режим эмитации
+TZT_5T10_1_YMIN,MODBUS TCP/IP,4x,1058,Значение MIN (для пересчета)
+TZT_5T10_1_YMAX,MODBUS TCP/IP,4x,1060,Значение MAX (для пересчета)
+TZT_5T10_1_BREAK_TLD,MODBUS TCP/IP,4x,1062,Порог обрыва
+TZT_5T10_1_TF,MODBUS TCP/IP,4x,1064,Постоянная времени фильтра
+TZT_5T10_1_AH,MODBUS TCP/IP,4x,1066,Уставка верхняя аварийная
+TZT_5T10_1_WH,MODBUS TCP/IP,4x,1068,Уставка верхняя предупредительная
+TZT_5T10_1_WL,MODBUS TCP/IP,4x,1070,Уставка нижняя предупредительная
+TZT_5T10_1_AL,MODBUS TCP/IP,4x,1072,Уставка нижняя аварийная 
+TZT_5T10_1_MAN_VALUE,MODBUS TCP/IP,4x,1074,Значение в режиме эмитации 
+TZT_5T10_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1076.0,Включен режим эмитации
+TZT_5T10_2_YMIN,MODBUS TCP/IP,4x,1077,Значение MIN (для пересчета)
+TZT_5T10_2_YMAX,MODBUS TCP/IP,4x,1079,Значение MAX (для пересчета)
+TZT_5T10_2_BREAK_TLD,MODBUS TCP/IP,4x,1081,Порог обрыва
+TZT_5T10_2_TF,MODBUS TCP/IP,4x,1083,Постоянная времени фильтра
+TZT_5T10_2_AH,MODBUS TCP/IP,4x,1085,Уставка верхняя аварийная
+TZT_5T10_2_WH,MODBUS TCP/IP,4x,1087,Уставка верхняя предупредительная
+TZT_5T10_2_WL,MODBUS TCP/IP,4x,1089,Уставка нижняя предупредительная
+TZT_5T10_2_AL,MODBUS TCP/IP,4x,1091,Уставка нижняя аварийная 
+TZT_5T10_2_MAN_VALUE,MODBUS TCP/IP,4x,1093,Значение в режиме эмитации 
+TZT_5T10_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1095.0,Включен режим эмитации
+PZT_5P12_1_YMIN,MODBUS TCP/IP,4x,1096,Значение MIN (для пересчета)
+PZT_5P12_1_YMAX,MODBUS TCP/IP,4x,1098,Значение MAX (для пересчета)
+PZT_5P12_1_BREAK_TLD,MODBUS TCP/IP,4x,1100,Порог обрыва
+PZT_5P12_1_TF,MODBUS TCP/IP,4x,1102,Постоянная времени фильтра
+PZT_5P12_1_AH,MODBUS TCP/IP,4x,1104,Уставка верхняя аварийная
+PZT_5P12_1_WH,MODBUS TCP/IP,4x,1106,Уставка верхняя предупредительная
+PZT_5P12_1_WL,MODBUS TCP/IP,4x,1108,Уставка нижняя предупредительная
+PZT_5P12_1_AL,MODBUS TCP/IP,4x,1110,Уставка нижняя аварийная 
+PZT_5P12_1_MAN_VALUE,MODBUS TCP/IP,4x,1112,Значение в режиме эмитации 
+PZT_5P12_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1114.0,Включен режим эмитации
+PZT_5P12_2_YMIN,MODBUS TCP/IP,4x,1115,Значение MIN (для пересчета)
+PZT_5P12_2_YMAX,MODBUS TCP/IP,4x,1117,Значение MAX (для пересчета)
+PZT_5P12_2_BREAK_TLD,MODBUS TCP/IP,4x,1119,Порог обрыва
+PZT_5P12_2_TF,MODBUS TCP/IP,4x,1121,Постоянная времени фильтра
+PZT_5P12_2_AH,MODBUS TCP/IP,4x,1123,Уставка верхняя аварийная
+PZT_5P12_2_WH,MODBUS TCP/IP,4x,1125,Уставка верхняя предупредительная
+PZT_5P12_2_WL,MODBUS TCP/IP,4x,1127,Уставка нижняя предупредительная
+PZT_5P12_2_AL,MODBUS TCP/IP,4x,1129,Уставка нижняя аварийная 
+PZT_5P12_2_MAN_VALUE,MODBUS TCP/IP,4x,1131,Значение в режиме эмитации 
+PZT_5P12_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1133.0,Включен режим эмитации
+LZT_5L11_1_YMIN,MODBUS TCP/IP,4x,1134,Значение MIN (для пересчета)
+LZT_5L11_1_YMAX,MODBUS TCP/IP,4x,1136,Значение MAX (для пересчета)
+LZT_5L11_1_BREAK_TLD,MODBUS TCP/IP,4x,1138,Порог обрыва
+LZT_5L11_1_TF,MODBUS TCP/IP,4x,1140,Постоянная времени фильтра
+LZT_5L11_1_AH,MODBUS TCP/IP,4x,1142,Уставка верхняя аварийная
+LZT_5L11_1_WH,MODBUS TCP/IP,4x,1144,Уставка верхняя предупредительная
+LZT_5L11_1_WL,MODBUS TCP/IP,4x,1146,Уставка нижняя предупредительная
+LZT_5L11_1_AL,MODBUS TCP/IP,4x,1148,Уставка нижняя аварийная 
+LZT_5L11_1_MAN_VALUE,MODBUS TCP/IP,4x,1150,Значение в режиме эмитации 
+LZT_5L11_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1152.0,Включен режим эмитации
+LZT_5L11_2_YMIN,MODBUS TCP/IP,4x,1153,Значение MIN (для пересчета)
+LZT_5L11_2_YMAX,MODBUS TCP/IP,4x,1155,Значение MAX (для пересчета)
+LZT_5L11_2_BREAK_TLD,MODBUS TCP/IP,4x,1157,Порог обрыва
+LZT_5L11_2_TF,MODBUS TCP/IP,4x,1159,Постоянная времени фильтра
+LZT_5L11_2_AH,MODBUS TCP/IP,4x,1161,Уставка верхняя аварийная
+LZT_5L11_2_WH,MODBUS TCP/IP,4x,1163,Уставка верхняя предупредительная
+LZT_5L11_2_WL,MODBUS TCP/IP,4x,1165,Уставка нижняя предупредительная
+LZT_5L11_2_AL,MODBUS TCP/IP,4x,1167,Уставка нижняя аварийная 
+LZT_5L11_2_MAN_VALUE,MODBUS TCP/IP,4x,1169,Значение в режиме эмитации 
+LZT_5L11_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1171.0,Включен режим эмитации
+TZT_5T11_1_YMIN,MODBUS TCP/IP,4x,1172,Значение MIN (для пересчета)
+TZT_5T11_1_YMAX,MODBUS TCP/IP,4x,1174,Значение MAX (для пересчета)
+TZT_5T11_1_BREAK_TLD,MODBUS TCP/IP,4x,1176,Порог обрыва
+TZT_5T11_1_TF,MODBUS TCP/IP,4x,1178,Постоянная времени фильтра
+TZT_5T11_1_AH,MODBUS TCP/IP,4x,1180,Уставка верхняя аварийная
+TZT_5T11_1_WH,MODBUS TCP/IP,4x,1182,Уставка верхняя предупредительная
+TZT_5T11_1_WL,MODBUS TCP/IP,4x,1184,Уставка нижняя предупредительная
+TZT_5T11_1_AL,MODBUS TCP/IP,4x,1186,Уставка нижняя аварийная 
+TZT_5T11_1_MAN_VALUE,MODBUS TCP/IP,4x,1188,Значение в режиме эмитации 
+TZT_5T11_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1190.0,Включен режим эмитации
+TZT_5T11_2_YMIN,MODBUS TCP/IP,4x,1191,Значение MIN (для пересчета)
+TZT_5T11_2_YMAX,MODBUS TCP/IP,4x,1193,Значение MAX (для пересчета)
+TZT_5T11_2_BREAK_TLD,MODBUS TCP/IP,4x,1195,Порог обрыва
+TZT_5T11_2_TF,MODBUS TCP/IP,4x,1197,Постоянная времени фильтра
+TZT_5T11_2_AH,MODBUS TCP/IP,4x,1199,Уставка верхняя аварийная
+TZT_5T11_2_WH,MODBUS TCP/IP,4x,1201,Уставка верхняя предупредительная
+TZT_5T11_2_WL,MODBUS TCP/IP,4x,1203,Уставка нижняя предупредительная
+TZT_5T11_2_AL,MODBUS TCP/IP,4x,1205,Уставка нижняя аварийная 
+TZT_5T11_2_MAN_VALUE,MODBUS TCP/IP,4x,1207,Значение в режиме эмитации 
+TZT_5T11_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1209.0,Включен режим эмитации
+PZT_5P13_1_YMIN,MODBUS TCP/IP,4x,1210,Значение MIN (для пересчета)
+PZT_5P13_1_YMAX,MODBUS TCP/IP,4x,1212,Значение MAX (для пересчета)
+PZT_5P13_1_BREAK_TLD,MODBUS TCP/IP,4x,1214,Порог обрыва
+PZT_5P13_1_TF,MODBUS TCP/IP,4x,1216,Постоянная времени фильтра
+PZT_5P13_1_AH,MODBUS TCP/IP,4x,1218,Уставка верхняя аварийная
+PZT_5P13_1_WH,MODBUS TCP/IP,4x,1220,Уставка верхняя предупредительная
+PZT_5P13_1_WL,MODBUS TCP/IP,4x,1222,Уставка нижняя предупредительная
+PZT_5P13_1_AL,MODBUS TCP/IP,4x,1224,Уставка нижняя аварийная 
+PZT_5P13_1_MAN_VALUE,MODBUS TCP/IP,4x,1226,Значение в режиме эмитации 
+PZT_5P13_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1228.0,Включен режим эмитации
+PZT_5P13_2_YMIN,MODBUS TCP/IP,4x,1229,Значение MIN (для пересчета)
+PZT_5P13_2_YMAX,MODBUS TCP/IP,4x,1231,Значение MAX (для пересчета)
+PZT_5P13_2_BREAK_TLD,MODBUS TCP/IP,4x,1233,Порог обрыва
+PZT_5P13_2_TF,MODBUS TCP/IP,4x,1235,Постоянная времени фильтра
+PZT_5P13_2_AH,MODBUS TCP/IP,4x,1237,Уставка верхняя аварийная
+PZT_5P13_2_WH,MODBUS TCP/IP,4x,1239,Уставка верхняя предупредительная
+PZT_5P13_2_WL,MODBUS TCP/IP,4x,1241,Уставка нижняя предупредительная
+PZT_5P13_2_AL,MODBUS TCP/IP,4x,1243,Уставка нижняя аварийная 
+PZT_5P13_2_MAN_VALUE,MODBUS TCP/IP,4x,1245,Значение в режиме эмитации 
+PZT_5P13_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1247.0,Включен режим эмитации
+LZT_5L12_1_YMIN,MODBUS TCP/IP,4x,1248,Значение MIN (для пересчета)
+LZT_5L12_1_YMAX,MODBUS TCP/IP,4x,1250,Значение MAX (для пересчета)
+LZT_5L12_1_BREAK_TLD,MODBUS TCP/IP,4x,1252,Порог обрыва
+LZT_5L12_1_TF,MODBUS TCP/IP,4x,1254,Постоянная времени фильтра
+LZT_5L12_1_AH,MODBUS TCP/IP,4x,1256,Уставка верхняя аварийная
+LZT_5L12_1_WH,MODBUS TCP/IP,4x,1258,Уставка верхняя предупредительная
+LZT_5L12_1_WL,MODBUS TCP/IP,4x,1260,Уставка нижняя предупредительная
+LZT_5L12_1_AL,MODBUS TCP/IP,4x,1262,Уставка нижняя аварийная 
+LZT_5L12_1_MAN_VALUE,MODBUS TCP/IP,4x,1264,Значение в режиме эмитации 
+LZT_5L12_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1266.0,Включен режим эмитации
+LZT_5L12_2_YMIN,MODBUS TCP/IP,4x,1267,Значение MIN (для пересчета)
+LZT_5L12_2_YMAX,MODBUS TCP/IP,4x,1269,Значение MAX (для пересчета)
+LZT_5L12_2_BREAK_TLD,MODBUS TCP/IP,4x,1271,Порог обрыва
+LZT_5L12_2_TF,MODBUS TCP/IP,4x,1273,Постоянная времени фильтра
+LZT_5L12_2_AH,MODBUS TCP/IP,4x,1275,Уставка верхняя аварийная
+LZT_5L12_2_WH,MODBUS TCP/IP,4x,1277,Уставка верхняя предупредительная
+LZT_5L12_2_WL,MODBUS TCP/IP,4x,1279,Уставка нижняя предупредительная
+LZT_5L12_2_AL,MODBUS TCP/IP,4x,1281,Уставка нижняя аварийная 
+LZT_5L12_2_MAN_VALUE,MODBUS TCP/IP,4x,1283,Значение в режиме эмитации 
+LZT_5L12_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1285.0,Включен режим эмитации
+TZT_5T12_1_YMIN,MODBUS TCP/IP,4x,1286,Значение MIN (для пересчета)
+TZT_5T12_1_YMAX,MODBUS TCP/IP,4x,1288,Значение MAX (для пересчета)
+TZT_5T12_1_BREAK_TLD,MODBUS TCP/IP,4x,1290,Порог обрыва
+TZT_5T12_1_TF,MODBUS TCP/IP,4x,1292,Постоянная времени фильтра
+TZT_5T12_1_AH,MODBUS TCP/IP,4x,1294,Уставка верхняя аварийная
+TZT_5T12_1_WH,MODBUS TCP/IP,4x,1296,Уставка верхняя предупредительная
+TZT_5T12_1_WL,MODBUS TCP/IP,4x,1298,Уставка нижняя предупредительная
+TZT_5T12_1_AL,MODBUS TCP/IP,4x,1300,Уставка нижняя аварийная 
+TZT_5T12_1_MAN_VALUE,MODBUS TCP/IP,4x,1302,Значение в режиме эмитации 
+TZT_5T12_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1304.0,Включен режим эмитации
+TZT_5T12_2_YMIN,MODBUS TCP/IP,4x,1305,Значение MIN (для пересчета)
+TZT_5T12_2_YMAX,MODBUS TCP/IP,4x,1307,Значение MAX (для пересчета)
+TZT_5T12_2_BREAK_TLD,MODBUS TCP/IP,4x,1309,Порог обрыва
+TZT_5T12_2_TF,MODBUS TCP/IP,4x,1311,Постоянная времени фильтра
+TZT_5T12_2_AH,MODBUS TCP/IP,4x,1313,Уставка верхняя аварийная
+TZT_5T12_2_WH,MODBUS TCP/IP,4x,1315,Уставка верхняя предупредительная
+TZT_5T12_2_WL,MODBUS TCP/IP,4x,1317,Уставка нижняя предупредительная
+TZT_5T12_2_AL,MODBUS TCP/IP,4x,1319,Уставка нижняя аварийная 
+TZT_5T12_2_MAN_VALUE,MODBUS TCP/IP,4x,1321,Значение в режиме эмитации 
+TZT_5T12_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1323.0,Включен режим эмитации
+PZT_5P14_1_YMIN,MODBUS TCP/IP,4x,1324,Значение MIN (для пересчета)
+PZT_5P14_1_YMAX,MODBUS TCP/IP,4x,1326,Значение MAX (для пересчета)
+PZT_5P14_1_BREAK_TLD,MODBUS TCP/IP,4x,1328,Порог обрыва
+PZT_5P14_1_TF,MODBUS TCP/IP,4x,1330,Постоянная времени фильтра
+PZT_5P14_1_AH,MODBUS TCP/IP,4x,1332,Уставка верхняя аварийная
+PZT_5P14_1_WH,MODBUS TCP/IP,4x,1334,Уставка верхняя предупредительная
+PZT_5P14_1_WL,MODBUS TCP/IP,4x,1336,Уставка нижняя предупредительная
+PZT_5P14_1_AL,MODBUS TCP/IP,4x,1338,Уставка нижняя аварийная 
+PZT_5P14_1_MAN_VALUE,MODBUS TCP/IP,4x,1340,Значение в режиме эмитации 
+PZT_5P14_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1342.0,Включен режим эмитации
+PZT_5P14_2_YMIN,MODBUS TCP/IP,4x,1343,Значение MIN (для пересчета)
+PZT_5P14_2_YMAX,MODBUS TCP/IP,4x,1345,Значение MAX (для пересчета)
+PZT_5P14_2_BREAK_TLD,MODBUS TCP/IP,4x,1347,Порог обрыва
+PZT_5P14_2_TF,MODBUS TCP/IP,4x,1349,Постоянная времени фильтра
+PZT_5P14_2_AH,MODBUS TCP/IP,4x,1351,Уставка верхняя аварийная
+PZT_5P14_2_WH,MODBUS TCP/IP,4x,1353,Уставка верхняя предупредительная
+PZT_5P14_2_WL,MODBUS TCP/IP,4x,1355,Уставка нижняя предупредительная
+PZT_5P14_2_AL,MODBUS TCP/IP,4x,1357,Уставка нижняя аварийная 
+PZT_5P14_2_MAN_VALUE,MODBUS TCP/IP,4x,1359,Значение в режиме эмитации 
+PZT_5P14_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1361.0,Включен режим эмитации
+LZT_5L13_1_YMIN,MODBUS TCP/IP,4x,1362,Значение MIN (для пересчета)
+LZT_5L13_1_YMAX,MODBUS TCP/IP,4x,1364,Значение MAX (для пересчета)
+LZT_5L13_1_BREAK_TLD,MODBUS TCP/IP,4x,1366,Порог обрыва
+LZT_5L13_1_TF,MODBUS TCP/IP,4x,1368,Постоянная времени фильтра
+LZT_5L13_1_AH,MODBUS TCP/IP,4x,1370,Уставка верхняя аварийная
+LZT_5L13_1_WH,MODBUS TCP/IP,4x,1372,Уставка верхняя предупредительная
+LZT_5L13_1_WL,MODBUS TCP/IP,4x,1374,Уставка нижняя предупредительная
+LZT_5L13_1_AL,MODBUS TCP/IP,4x,1376,Уставка нижняя аварийная 
+LZT_5L13_1_MAN_VALUE,MODBUS TCP/IP,4x,1378,Значение в режиме эмитации 
+LZT_5L13_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1380.0,Включен режим эмитации
+LZT_5L13_2_YMIN,MODBUS TCP/IP,4x,1381,Значение MIN (для пересчета)
+LZT_5L13_2_YMAX,MODBUS TCP/IP,4x,1383,Значение MAX (для пересчета)
+LZT_5L13_2_BREAK_TLD,MODBUS TCP/IP,4x,1385,Порог обрыва
+LZT_5L13_2_TF,MODBUS TCP/IP,4x,1387,Постоянная времени фильтра
+LZT_5L13_2_AH,MODBUS TCP/IP,4x,1389,Уставка верхняя аварийная
+LZT_5L13_2_WH,MODBUS TCP/IP,4x,1391,Уставка верхняя предупредительная
+LZT_5L13_2_WL,MODBUS TCP/IP,4x,1393,Уставка нижняя предупредительная
+LZT_5L13_2_AL,MODBUS TCP/IP,4x,1395,Уставка нижняя аварийная 
+LZT_5L13_2_MAN_VALUE,MODBUS TCP/IP,4x,1397,Значение в режиме эмитации 
+LZT_5L13_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1399.0,Включен режим эмитации
+TZT_5T13_1_YMIN,MODBUS TCP/IP,4x,1400,Значение MIN (для пересчета)
+TZT_5T13_1_YMAX,MODBUS TCP/IP,4x,1402,Значение MAX (для пересчета)
+TZT_5T13_1_BREAK_TLD,MODBUS TCP/IP,4x,1404,Порог обрыва
+TZT_5T13_1_TF,MODBUS TCP/IP,4x,1406,Постоянная времени фильтра
+TZT_5T13_1_AH,MODBUS TCP/IP,4x,1408,Уставка верхняя аварийная
+TZT_5T13_1_WH,MODBUS TCP/IP,4x,1410,Уставка верхняя предупредительная
+TZT_5T13_1_WL,MODBUS TCP/IP,4x,1412,Уставка нижняя предупредительная
+TZT_5T13_1_AL,MODBUS TCP/IP,4x,1414,Уставка нижняя аварийная 
+TZT_5T13_1_MAN_VALUE,MODBUS TCP/IP,4x,1416,Значение в режиме эмитации 
+TZT_5T13_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1418.0,Включен режим эмитации
+TZT_5T13_2_YMIN,MODBUS TCP/IP,4x,1419,Значение MIN (для пересчета)
+TZT_5T13_2_YMAX,MODBUS TCP/IP,4x,1421,Значение MAX (для пересчета)
+TZT_5T13_2_BREAK_TLD,MODBUS TCP/IP,4x,1423,Порог обрыва
+TZT_5T13_2_TF,MODBUS TCP/IP,4x,1425,Постоянная времени фильтра
+TZT_5T13_2_AH,MODBUS TCP/IP,4x,1427,Уставка верхняя аварийная
+TZT_5T13_2_WH,MODBUS TCP/IP,4x,1429,Уставка верхняя предупредительная
+TZT_5T13_2_WL,MODBUS TCP/IP,4x,1431,Уставка нижняя предупредительная
+TZT_5T13_2_AL,MODBUS TCP/IP,4x,1433,Уставка нижняя аварийная 
+TZT_5T13_2_MAN_VALUE,MODBUS TCP/IP,4x,1435,Значение в режиме эмитации 
+TZT_5T13_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1437.0,Включен режим эмитации
+PZT_5P15_1_YMIN,MODBUS TCP/IP,4x,1438,Значение MIN (для пересчета)
+PZT_5P15_1_YMAX,MODBUS TCP/IP,4x,1440,Значение MAX (для пересчета)
+PZT_5P15_1_BREAK_TLD,MODBUS TCP/IP,4x,1442,Порог обрыва
+PZT_5P15_1_TF,MODBUS TCP/IP,4x,1444,Постоянная времени фильтра
+PZT_5P15_1_AH,MODBUS TCP/IP,4x,1446,Уставка верхняя аварийная
+PZT_5P15_1_WH,MODBUS TCP/IP,4x,1448,Уставка верхняя предупредительная
+PZT_5P15_1_WL,MODBUS TCP/IP,4x,1450,Уставка нижняя предупредительная
+PZT_5P15_1_AL,MODBUS TCP/IP,4x,1452,Уставка нижняя аварийная 
+PZT_5P15_1_MAN_VALUE,MODBUS TCP/IP,4x,1454,Значение в режиме эмитации 
+PZT_5P15_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1456.0,Включен режим эмитации
+PZT_5P15_2_YMIN,MODBUS TCP/IP,4x,1457,Значение MIN (для пересчета)
+PZT_5P15_2_YMAX,MODBUS TCP/IP,4x,1459,Значение MAX (для пересчета)
+PZT_5P15_2_BREAK_TLD,MODBUS TCP/IP,4x,1461,Порог обрыва
+PZT_5P15_2_TF,MODBUS TCP/IP,4x,1463,Постоянная времени фильтра
+PZT_5P15_2_AH,MODBUS TCP/IP,4x,1465,Уставка верхняя аварийная
+PZT_5P15_2_WH,MODBUS TCP/IP,4x,1467,Уставка верхняя предупредительная
+PZT_5P15_2_WL,MODBUS TCP/IP,4x,1469,Уставка нижняя предупредительная
+PZT_5P15_2_AL,MODBUS TCP/IP,4x,1471,Уставка нижняя аварийная 
+PZT_5P15_2_MAN_VALUE,MODBUS TCP/IP,4x,1473,Значение в режиме эмитации 
+PZT_5P15_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1475.0,Включен режим эмитации
+LT_5L2_YMIN,MODBUS TCP/IP,4x,1476,Значение MIN (для пересчета)
+LT_5L2_YMAX,MODBUS TCP/IP,4x,1478,Значение MAX (для пересчета)
+LT_5L2_BREAK_TLD,MODBUS TCP/IP,4x,1480,Порог обрыва
+LT_5L2_TF,MODBUS TCP/IP,4x,1482,Постоянная времени фильтра
+LT_5L2_AH,MODBUS TCP/IP,4x,1484,Уставка верхняя аварийная
+LT_5L2_WH,MODBUS TCP/IP,4x,1486,Уставка верхняя предупредительная
+LT_5L2_WL,MODBUS TCP/IP,4x,1488,Уставка нижняя предупредительная
+LT_5L2_AL,MODBUS TCP/IP,4x,1490,Уставка нижняя аварийная 
+LT_5L2_MAN_VALUE,MODBUS TCP/IP,4x,1492,Значение в режиме эмитации 
+LT_5L2_MAN_ON,MODBUS TCP/IP,4x_Bit,1494.0,Включен режим эмитации
+LT_5L3_YMIN,MODBUS TCP/IP,4x,1495,Значение MIN (для пересчета)
+LT_5L3_YMAX,MODBUS TCP/IP,4x,1497,Значение MAX (для пересчета)
+LT_5L3_BREAK_TLD,MODBUS TCP/IP,4x,1499,Порог обрыва
+LT_5L3_TF,MODBUS TCP/IP,4x,1501,Постоянная времени фильтра
+LT_5L3_AH,MODBUS TCP/IP,4x,1503,Уставка верхняя аварийная
+LT_5L3_WH,MODBUS TCP/IP,4x,1505,Уставка верхняя предупредительная
+LT_5L3_WL,MODBUS TCP/IP,4x,1507,Уставка нижняя предупредительная
+LT_5L3_AL,MODBUS TCP/IP,4x,1509,Уставка нижняя аварийная 
+LT_5L3_MAN_VALUE,MODBUS TCP/IP,4x,1511,Значение в режиме эмитации 
+LT_5L3_MAN_ON,MODBUS TCP/IP,4x_Bit,1513.0,Включен режим эмитации
+LT_5L4_YMIN,MODBUS TCP/IP,4x,1514,Значение MIN (для пересчета)
+LT_5L4_YMAX,MODBUS TCP/IP,4x,1516,Значение MAX (для пересчета)
+LT_5L4_BREAK_TLD,MODBUS TCP/IP,4x,1518,Порог обрыва
+LT_5L4_TF,MODBUS TCP/IP,4x,1520,Постоянная времени фильтра
+LT_5L4_AH,MODBUS TCP/IP,4x,1522,Уставка верхняя аварийная
+LT_5L4_WH,MODBUS TCP/IP,4x,1524,Уставка верхняя предупредительная
+LT_5L4_WL,MODBUS TCP/IP,4x,1526,Уставка нижняя предупредительная
+LT_5L4_AL,MODBUS TCP/IP,4x,1528,Уставка нижняя аварийная 
+LT_5L4_MAN_VALUE,MODBUS TCP/IP,4x,1530,Значение в режиме эмитации 
+LT_5L4_MAN_ON,MODBUS TCP/IP,4x_Bit,1532.0,Включен режим эмитации
+PZT_5P10_1_YMIN,MODBUS TCP/IP,4x,1533,Значение MIN (для пересчета)
+PZT_5P10_1_YMAX,MODBUS TCP/IP,4x,1535,Значение MAX (для пересчета)
+PZT_5P10_1_BREAK_TLD,MODBUS TCP/IP,4x,1537,Порог обрыва
+PZT_5P10_1_TF,MODBUS TCP/IP,4x,1539,Постоянная времени фильтра
+PZT_5P10_1_AH,MODBUS TCP/IP,4x,1541,Уставка верхняя аварийная
+PZT_5P10_1_WH,MODBUS TCP/IP,4x,1543,Уставка верхняя предупредительная
+PZT_5P10_1_WL,MODBUS TCP/IP,4x,1545,Уставка нижняя предупредительная
+PZT_5P10_1_AL,MODBUS TCP/IP,4x,1547,Уставка нижняя аварийная 
+PZT_5P10_1_MAN_VALUE,MODBUS TCP/IP,4x,1549,Значение в режиме эмитации 
+PZT_5P10_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1551.0,Включен режим эмитации
+PZT_5P10_2_YMIN,MODBUS TCP/IP,4x,1552,Значение MIN (для пересчета)
+PZT_5P10_2_YMAX,MODBUS TCP/IP,4x,1554,Значение MAX (для пересчета)
+PZT_5P10_2_BREAK_TLD,MODBUS TCP/IP,4x,1556,Порог обрыва
+PZT_5P10_2_TF,MODBUS TCP/IP,4x,1558,Постоянная времени фильтра
+PZT_5P10_2_AH,MODBUS TCP/IP,4x,1560,Уставка верхняя аварийная
+PZT_5P10_2_WH,MODBUS TCP/IP,4x,1562,Уставка верхняя предупредительная
+PZT_5P10_2_WL,MODBUS TCP/IP,4x,1564,Уставка нижняя предупредительная
+PZT_5P10_2_AL,MODBUS TCP/IP,4x,1566,Уставка нижняя аварийная 
+PZT_5P10_2_MAN_VALUE,MODBUS TCP/IP,4x,1568,Значение в режиме эмитации 
+PZT_5P10_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1570.0,Включен режим эмитации
+PZT_5P11_1_YMIN,MODBUS TCP/IP,4x,1571,Значение MIN (для пересчета)
+PZT_5P11_1_YMAX,MODBUS TCP/IP,4x,1573,Значение MAX (для пересчета)
+PZT_5P11_1_BREAK_TLD,MODBUS TCP/IP,4x,1575,Порог обрыва
+PZT_5P11_1_TF,MODBUS TCP/IP,4x,1577,Постоянная времени фильтра
+PZT_5P11_1_AH,MODBUS TCP/IP,4x,1579,Уставка верхняя аварийная
+PZT_5P11_1_WH,MODBUS TCP/IP,4x,1581,Уставка верхняя предупредительная
+PZT_5P11_1_WL,MODBUS TCP/IP,4x,1583,Уставка нижняя предупредительная
+PZT_5P11_1_AL,MODBUS TCP/IP,4x,1585,Уставка нижняя аварийная 
+PZT_5P11_1_MAN_VALUE,MODBUS TCP/IP,4x,1587,Значение в режиме эмитации 
+PZT_5P11_1_MAN_ON,MODBUS TCP/IP,4x_Bit,1589.0,Включен режим эмитации
+PZT_5P11_2_YMIN,MODBUS TCP/IP,4x,1590,Значение MIN (для пересчета)
+PZT_5P11_2_YMAX,MODBUS TCP/IP,4x,1592,Значение MAX (для пересчета)
+PZT_5P11_2_BREAK_TLD,MODBUS TCP/IP,4x,1594,Порог обрыва
+PZT_5P11_2_TF,MODBUS TCP/IP,4x,1596,Постоянная времени фильтра
+PZT_5P11_2_AH,MODBUS TCP/IP,4x,1598,Уставка верхняя аварийная
+PZT_5P11_2_WH,MODBUS TCP/IP,4x,1600,Уставка верхняя предупредительная
+PZT_5P11_2_WL,MODBUS TCP/IP,4x,1602,Уставка нижняя предупредительная
+PZT_5P11_2_AL,MODBUS TCP/IP,4x,1604,Уставка нижняя аварийная 
+PZT_5P11_2_MAN_VALUE,MODBUS TCP/IP,4x,1606,Значение в режиме эмитации 
+PZT_5P11_2_MAN_ON,MODBUS TCP/IP,4x_Bit,1608.0,Включен режим эмитации
