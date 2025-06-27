@@ -23,7 +23,7 @@
 # Go workspace file
 go.work
 go.work.sum
-
+*.json
 # env file
 .env
 >>>>>>> e56de9fa549f35e4c6c2e435fc19cb4a15ec95a1
