@@ -1,4 +1,4 @@
-package main
+package gsheets
 
 import (
 	"context"
@@ -71,7 +71,7 @@ func ParseUsers(rows [][]interface{}) []models.User {
 
 func (s *SyncService) RunSync(ctx context.Context) error {
 	// 1. Чтение данных из Google Sheets
-	spreadsheetID := "your-spreadsheet-id"
+	spreadsheetID := "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
 	readRange := "Users!A2:E"
 	rows, err := s.sheetsService.ReadSheet(spreadsheetID, readRange)
 	if err != nil {
