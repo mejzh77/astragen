@@ -1,6 +1,11 @@
+package main
+
 import (
-	"github.com/mezsh77/astragen/internal/gsheets"
-	"github.com/mezsh77/astragen/pkg/models"
+	"context"
+	"log"
+	"os"
+
+	"github.com/mejzh77/astragen/internal/gsheets"
 )
 
 func main() {
