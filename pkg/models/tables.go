@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -15,7 +14,7 @@ type Product struct {
 }
 
 type DI struct {
-	gorm.Model
+	//gorm.Model
 	Tag          string    `gsheets:"id"        gorm:"column:uniqueIndex"` // ID из Google-таблицы
 	System       string    `gsheets:"system"    gorm:"index;size:100"`
 	Equipment    string    `gsheets:"equipment" gorm:"size:200"`
@@ -121,4 +120,3 @@ type Cable struct {
 type Row interface {
 	Product | Signal | Cable | Node
 }
-

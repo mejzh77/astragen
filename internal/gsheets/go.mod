@@ -3,7 +3,7 @@ module github.com/mejzh77/astragen/internal/gsheets
 go 1.24.4
 
 require (
-	github.com/mejzh77/astragen v0.0.0-20250627103750-3d84b4132eae
+	github.com/mejzh77/astragen/pkg/models v0.0.0-20250628064505-a7993960eeb9
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.239.0
 )
@@ -32,4 +32,5 @@ require (
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )
-replace github.com/mejzh77/astragen => ../..
+
+replace github.com/mejzh77/astragen => ../../.

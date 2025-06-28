@@ -7,8 +7,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 
-	"google.golang.org/api/sheets/v4"
 	"github.com/mejzh77/astragen/pkg/models"
+	"google.golang.org/api/sheets/v4"
 )
 
 type GoogleSheetsService struct {
@@ -44,7 +44,7 @@ func (s *GoogleSheetsService) RunSync(ctx context.Context) error {
 	// 1. Чтение данных из Google Sheets
 	signals := []models.AI{}
 	spreadsheetID := "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
-	readRange := "AI!A2:E"	
+	readRange := "AI!A2:E"
 	rows, err := s.ReadSheet(spreadsheetID, readRange)
 	if err != nil {
 		return fmt.Errorf("failed to read sheet: %w", err)
