@@ -9,12 +9,14 @@ import (
 )
 
 func main() {
+
 	ctx := context.Background()
+
 	creds, err := os.ReadFile("credentials.json")
+	s, err := gsheets.NewService(ctx, creds)
 	check(err)
-	sheetService, err := gsheets.NewService(ctx, creds)
+	err = s.RunSync(ctx)
 	check(err)
-	err = sheetService.RunSync(ctx)
 }
 
 func check(err error) {

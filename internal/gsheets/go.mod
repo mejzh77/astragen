@@ -33,4 +33,4 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 
-replace github.com/mejzh77/astragen => ../../.
+replace github.com/mejzh77/astragen/pkg/models => ..\..\pkg\models
