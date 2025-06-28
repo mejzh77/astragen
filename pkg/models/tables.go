@@ -122,6 +122,3 @@ type Row interface {
 	Product | Signal | Cable | Node
 }
 
-func main() {
-	fmt.Println("vim-go")
-}

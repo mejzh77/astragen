@@ -3,20 +3,16 @@ package gsheets
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
+
 	"google.golang.org/api/sheets/v4"
+	"github.com/mejzh77/astragen/pkg/models"
 )
 
 type GoogleSheetsService struct {
 	service *sheets.Service
-}
-
-type SyncService struct {
-	sheetsService *gsheets.GoogleSheetsService
-	userRepo      *repository.UserRepository
 }
 
 func NewService(ctx context.Context, credentialsJSON []byte) (*GoogleSheetsService, error) {
@@ -44,42 +40,17 @@ func (s *GoogleSheetsService) ReadSheet(spreadsheetID, readRange string) ([][]in
 	return resp.Values, nil
 }
 
-func ParseUsers(rows [][]interface{}) []models.User {
-	var users []models.User
-
-	for i, row := range rows {
-		// Пропускаем заголовок
-		if i == 0 {
-			continue
-		}
-
-		user := models.User{
-			GoogleID: fmt.Sprint(row[0]),
-			Name:     fmt.Sprint(row[1]),
-			Email:    fmt.Sprint(row[2]),
-		}
-
-		// Обработка чисел
-		if age, err := strconv.Atoi(fmt.Sprint(row[3])); err == nil {
-			user.Age = age
-		}
-
-		users = append(users, user)
-	}
-	return users
-}
-
-func (s *SyncService) RunSync(ctx context.Context) error {
+func (s *GoogleSheetsService) RunSync(ctx context.Context) error {
 	// 1. Чтение данных из Google Sheets
+	signals := []models.AI{}
 	spreadsheetID := "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
-	readRange := "Users!A2:E"
-	rows, err := s.sheetsService.ReadSheet(spreadsheetID, readRange)
+	readRange := "AI!A2:E"	
+	rows, err := s.ReadSheet(spreadsheetID, readRange)
 	if err != nil {
 		return fmt.Errorf("failed to read sheet: %w", err)
 	}
-
 	// 2. Парсинг данных
-	users := gsheets.ParseUsers(rows)
-
+	Unmarshal(rows, &signals)
+	fmt.Println(signals)
 	return nil
 }

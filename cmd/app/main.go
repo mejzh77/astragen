@@ -14,7 +14,7 @@ func main() {
 	check(err)
 	sheetService, err := gsheets.NewService(ctx, creds)
 	check(err)
-	err = gsheets.RunSync(ctx)
+	err = sheetService.RunSync(ctx)
 }
 
 func check(err error) {
