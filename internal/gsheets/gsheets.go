@@ -51,13 +51,13 @@ func (s *GoogleSheetsService) RunSync(ctx context.Context) error {
 		return fmt.Errorf("failed to GetRange: %w", err)
 	}
 	rows, err := s.ReadSheet(spreadsheetID, readRange)
-	fmt.Println(rows)
+	//fmt.Println(rows)
 	if err != nil {
 		return fmt.Errorf("failed to read sheet: %w", err)
 	}
 	// 2. Парсинг данных
 	Unmarshal(rows, &signals)
-	fmt.Println(signals)
+	//fmt.Println(signals)
 	return nil
 }
 

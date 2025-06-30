@@ -16,7 +16,12 @@ var timeFormats = []string{
 	"02.01.2006 15:04:05",
 }
 
-func convertValue(value string, field reflect.Value) error {
+// SetTimeFormat устанавливает кастомный формат времени
+func (p *Parser) SetTimeFormat(format string) {
+	p.timeFormat = format
+}
+
+func (p *Parser) convertValue(value string, field reflect.Value, options map[string]bool) error {
 	if value == "" {
 		return nil // Пустые значения не меняют состояние поля
 	}

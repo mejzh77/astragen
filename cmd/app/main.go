@@ -13,6 +13,7 @@ func main() {
 	ctx := context.Background()
 
 	creds, err := os.ReadFile("credentials.json")
+	check(err)
 	s, err := gsheets.NewService(ctx, creds)
 	check(err)
 	err = s.RunSync(ctx)

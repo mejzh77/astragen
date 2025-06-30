@@ -2,7 +2,7 @@ module github.com/mejzh77/astragen
 
 go 1.24.4
 
-require github.com/mejzh77/astragen/internal/gsheets v0.0.0-20250628071748-9689e7348336
+require github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
 
 require (
 	cloud.google.com/go/auth v0.16.2 // indirect
@@ -32,4 +32,4 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 
-replace github.com/mejzh77/astragen/internal/gsheets v0.0.0-20250628071748-9689e7348336 => ./internal/gsheets
+replace github.com/mejzh77/astragen/internal/gsheets => ./internal/gsheets

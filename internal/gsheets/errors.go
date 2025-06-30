@@ -32,3 +32,10 @@ func (e *InvalidUnmarshalError) Error() string {
 	}
 	return "gsheets: Unmarshal(non-pointer " + e.Type.String() + ")"
 }
+// newUnmarshalTypeError создает ошибку несоответствия типа
+func newUnmarshalTypeError(value string, typ reflect.Type) error {
+	return &UnmarshalTypeError{
+		Value: value,
+		Type:  typ,
+	}
+}
