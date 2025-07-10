@@ -1,14 +1,17 @@
-//Package gsheets 
-//Реализует парсер для Google-таблиц
+// Package gsheets
+// Реализует парсер для Google-таблиц
 package gsheets
 
 import (
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
+
 // Parser - основной интерфейс библиотеки
 type Parser struct {
 	headers    []any
@@ -19,18 +22,19 @@ type Parser struct {
 // NewParser создает новый парсер для Google Sheets
 func NewParser(headers []any) *Parser {
 	p := &Parser{
-		headers:   headers, 
+		headers:   headers,
 		headerMap: make(map[string]int),
 	}
-	
+
 	// Создаем нормализованную карту заголовков
 	for i, header := range headers {
 		normalized := p.normalizeHeader(header.(string))
 		p.headerMap[normalized] = i
 	}
-	
+
 	return p
 }
+
 // parseStruct рекурсивно парсит структуру
 func (p *Parser) parseStruct(row []any, val reflect.Value) error {
 	typ := val.Type()
@@ -38,21 +42,21 @@ func (p *Parser) parseStruct(row []any, val reflect.Value) error {
 		field := typ.Field(i)
 		fieldVal := val.Field(i)
 
-        tag := field.Tag.Get("gsheets")
+		tag := field.Tag.Get("gsheets")
 		// Обрабатываем вложенные структуры
 		if field.Anonymous {
-            if strings.Contains(tag, ",squash") || tag == "squash" {
-                if err := p.parseStruct(row, fieldVal); err != nil {
-                    return err
-                }
-                continue
-            }
-        }
+			if strings.Contains(tag, ",squash") || tag == "squash" {
+				if err := p.parseStruct(row, fieldVal); err != nil {
+					return err
+				}
+				continue
+			}
+		}
 		// Пропускаем непэкспортируемые поля
 		if !fieldVal.CanSet() {
 			continue
 		}
-		
+
 		if tag == "" || tag == "-" {
 			continue
 		}
@@ -63,7 +67,7 @@ func (p *Parser) parseStruct(row []any, val reflect.Value) error {
 		for _, opt := range tagParts[1:] {
 			options[strings.TrimSpace(opt)] = true
 		}
-		
+
 		// Получаем значение из строки
 		value, exists := p.getValue(row, columnName)
 		if !exists {
@@ -72,13 +76,13 @@ func (p *Parser) parseStruct(row []any, val reflect.Value) error {
 			}
 			continue
 		}
-		
+
 		// Конвертируем значение
 		if err := p.convertValue(value, fieldVal, options); err != nil {
 			return fmt.Errorf("gsheets: error in column '%s': %w", columnName, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -89,13 +93,14 @@ func (p *Parser) getValue(row []any, columnName string) (string, bool) {
 	if !exists {
 		return "", false
 	}
-	
+
 	if idx >= len(row) {
 		return "", false
 	}
-	
-	return strings.TrimSpace(row[idx].(string)), true
+
+	return sanitizeString(strings.TrimSpace(row[idx].(string))), true
 }
+
 // Parse парсит строку в структуру
 func (p *Parser) Parse(row []any, v any) error {
 	val := reflect.ValueOf(v)
@@ -110,12 +115,16 @@ func (p *Parser) Parse(row []any, v any) error {
 	}
 	return p.parseStruct(row, val)
 }
+
 // Unmarshal парсит данные из Google Sheets в структуру
 // rows - строки таблицы (первая строка - заголовки)
 // v - указатель на слайс структур
 func Unmarshal(rows [][]any, v any) error {
-
 	val := reflect.ValueOf(v)
+	if val.Kind() != reflect.Ptr || val.IsNil() {
+		return &InvalidUnmarshalError{Type: reflect.TypeOf(v)}
+	}
+
 	// Получаем тип элементов слайса
 	sliceVal := val.Elem()
 	if sliceVal.Kind() != reflect.Slice {
@@ -143,8 +152,8 @@ func Unmarshal(rows [][]any, v any) error {
 		if err := parser.Parse(row, newElem.Addr().Interface()); err != nil {
 			panic(err)
 		}
-		//fmt.Println(newElem)	
-		// Добавляем в слайс
+		// fmt.Println(newElem)
+		//  Добавляем в слайс
 		sliceVal.Set(reflect.Append(sliceVal, newElem))
 	}
 
@@ -157,3 +166,34 @@ func (p *Parser) normalizeHeader(header string) string {
 	return strings.ToLower(strings.TrimSpace(header))
 }
 
+func sanitizeString(s string) string {
+
+	if !utf8.ValidString(s) {
+
+		log.Printf("WARNING: Invalid UTF-8 string found: %q", s)
+		// Удаляем невалидные UTF-8 символы
+		v := make([]rune, 0, len(s))
+		for i, r := range s {
+			if r == utf8.RuneError {
+				_, size := utf8.DecodeRuneInString(s[i:])
+				if size == 1 {
+					continue // Пропускаем невалидный символ
+				}
+			}
+			v = append(v, r)
+		}
+		s = string(v)
+	}
+	return parseCellValue(s)
+}
+func parseCellValue(value interface{}) string {
+	str := fmt.Sprintf("%v", value)
+	// Удаляем непечатные символы
+	str = strings.Map(func(r rune) rune {
+		if r >= 32 && r != 127 {
+			return r
+		}
+		return -1
+	}, str)
+	return str
+}

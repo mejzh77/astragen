@@ -2,7 +2,12 @@ module github.com/mejzh77/astragen
 
 go 1.24.4
 
-require github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
+require (
+	github.com/mejzh77/astragen/internal/database v0.0.0-00010101000000-000000000000
+	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
+	gorm.io/driver/postgres v1.6.0
+	gorm.io/gorm v1.30.0
+)
 
 require (
 	cloud.google.com/go/auth v0.16.2 // indirect
@@ -15,7 +20,15 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.2 // indirect
-	github.com/mejzh77/astragen/pkg/models v0.0.0-20250628071748-9689e7348336 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.6.0 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000 // indirect
+	github.com/mejzh77/astragen/internal/repository v0.0.0-00010101000000-000000000000 // indirect
+	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
@@ -24,6 +37,7 @@ require (
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	google.golang.org/api v0.239.0 // indirect
@@ -33,3 +47,11 @@ require (
 )
 
 replace github.com/mejzh77/astragen/internal/gsheets => ./internal/gsheets
+
+replace github.com/mejzh77/astragen/configs/config => ./configs/config
+
+replace github.com/mejzh77/astragen/pkg/models => ./pkg/models
+
+replace github.com/mejzh77/astragen/internal/repository => ./internal/repository
+
+replace github.com/mejzh77/astragen/internal/database => ./internal/database

@@ -8,16 +8,27 @@ import (
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
+	"gorm.io/gorm"
 
+	"github.com/mejzh77/astragen/configs/config"
+	"github.com/mejzh77/astragen/internal/repository"
 	"github.com/mejzh77/astragen/pkg/models"
 	"google.golang.org/api/sheets/v4"
 )
 
 type GoogleSheetsService struct {
-	service *sheets.Service
+	service    *sheets.Service
+	signalRepo *repository.SignalRepository
 }
 
-func NewService(ctx context.Context, credentialsJSON []byte) (*GoogleSheetsService, error) {
+func NewGoogleSheetsService(client *sheets.Service, db *gorm.DB) *GoogleSheetsService {
+	return &GoogleSheetsService{
+		service:    client,
+		signalRepo: repository.NewSignalRepository(db),
+	}
+}
+
+func NewService(ctx context.Context, credentialsJSON []byte) (*sheets.Service, error) {
 	client, err := google.JWTConfigFromJSON(
 		credentialsJSON,
 		sheets.SpreadsheetsReadonlyScope,
@@ -31,7 +42,7 @@ func NewService(ctx context.Context, credentialsJSON []byte) (*GoogleSheetsServi
 		return nil, fmt.Errorf("failed to create sheets service: %w", err)
 	}
 
-	return &GoogleSheetsService{service: srv}, nil
+	return srv, nil
 }
 
 func (s *GoogleSheetsService) ReadSheet(spreadsheetID, readRange string) ([][]interface{}, error) {
@@ -43,21 +54,51 @@ func (s *GoogleSheetsService) ReadSheet(spreadsheetID, readRange string) ([][]in
 }
 
 func (s *GoogleSheetsService) RunSync(ctx context.Context) error {
-	// 1. Чтение данных из Google Sheets
-	signals := []models.DI{}
-	spreadsheetID := "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
-	readRange, err := GetRange("DI", models.DI{}, true)
-	if err != nil {
-		return fmt.Errorf("failed to GetRange: %w", err)
+	var allSignals []models.Signal
+	for _, sheetCfg := range config.AppConfig.Sheets {
+		// 1. Чтение данных из листа
+		readRange, err := GetRange(sheetCfg.SheetName, sheetCfg.Model, true)
+		if err != nil {
+			return fmt.Errorf("failed to GetRange for sheet %s: %w", sheetCfg.SheetName, err)
+		}
+
+		rows, err := s.ReadSheet(config.AppConfig.SpreadsheetID, readRange)
+		if err != nil {
+			return fmt.Errorf("failed to read sheet %s: %w", sheetCfg.SheetName, err)
+		}
+
+		// 2. Парсинг в соответствующую модель
+		modelSlice := reflect.New(reflect.SliceOf(reflect.TypeOf(sheetCfg.Model).Elem()))
+		if err := Unmarshal(rows, modelSlice.Interface()); err != nil {
+			return fmt.Errorf("failed to unmarshal sheet %s: %w", sheetCfg.SheetName, err)
+		}
+
+		// 3. Преобразование в Signal
+		for i := 0; i < modelSlice.Elem().Len(); i++ {
+			item := modelSlice.Elem().Index(i).Addr().Interface()
+			var signal models.Signal
+
+			switch v := item.(type) {
+			case *models.DI:
+				signal.FromDI(*v)
+			case *models.AI:
+				signal.FromAI(*v)
+			case *models.DO:
+				signal.FromDO(*v)
+			case *models.AO:
+				signal.FromAO(*v)
+			}
+
+			signal.SignalType = sheetCfg.SheetName
+			allSignals = append(allSignals, signal)
+		}
 	}
-	rows, err := s.ReadSheet(spreadsheetID, readRange)
-	//fmt.Println(rows)
-	if err != nil {
-		return fmt.Errorf("failed to read sheet: %w", err)
+
+	// 4. Сохранение в БД
+	if err := s.signalRepo.SaveSignals(allSignals); err != nil {
+		return fmt.Errorf("failed to save signals: %w", err)
 	}
-	// 2. Парсинг данных
-	Unmarshal(rows, &signals)
-	//fmt.Println(signals)
+
 	return nil
 }
 
@@ -86,11 +127,10 @@ func GetRange(sheetName string, structTemplate interface{}, withHeader bool) (st
 
 	// Если количество столбцов больше 26 (Z), используем нотацию типа AA, AB и т.д.
 	endColumn := columnToLetter(numColumns)
-	endCell := fmt.Sprintf("%s", endColumn)
 
 	// Для больших таблиц можно ограничить количество строк
 	// Например, 1000 строк данных + 1 строка заголовка
-	return fmt.Sprintf("%s!%s:%s", sheetName, startCell, endCell), nil
+	return fmt.Sprintf("%s!%s:%s", sheetName, startCell, endColumn), nil
 }
 
 // calculateColumns рекурсивно вычисляет количество столбцов в структуре
