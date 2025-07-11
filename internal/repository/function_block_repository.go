@@ -127,3 +127,8 @@ func (r *FunctionBlockRepository) SyncFBFromSignals(signals []models.Signal) err
 		return nil
 	})
 }
+func (r *FunctionBlockRepository) GetWithDetails(id string, fb *models.FunctionBlock) error {
+	return r.db.
+		Preload("Variables").
+		First(fb, id).Error
+}

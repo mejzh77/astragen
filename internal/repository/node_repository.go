@@ -59,3 +59,8 @@ func (r *NodeRepository) LinkToSystem(node *models.Node, systemID uint) error {
 	node.SystemID = &systemID
 	return r.db.Model(node).Update("system_id", systemID).Error
 }
+func (r *NodeRepository) GetWithDetails(id string, node *models.Node) error {
+	return r.db.
+		Preload("System").
+		First(node, id).Error
+}

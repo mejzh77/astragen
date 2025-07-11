@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mejzh77/astragen/configs/config"
 	"github.com/mejzh77/astragen/internal/gsheets"
 	"github.com/mejzh77/astragen/internal/repository"
@@ -74,7 +75,64 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 
 	return nil
 }
+func (s *SyncService) GetProjectDetails(id string) (gin.H, error) {
+	var project models.Project
+	if err := s.projectRepo.GetWithDetails(id, &project); err != nil {
+		return nil, fmt.Errorf("failed to get project details: %w", err)
+	}
+	return project.ToDetailedAPI(), nil
+}
 
+func (s *SyncService) GetSystemDetails(id string) (gin.H, error) {
+	var system models.System
+	if err := s.systemRepo.GetWithDetails(id, &system); err != nil {
+		return nil, fmt.Errorf("failed to get system details: %w", err)
+	}
+	return system.ToDetailedAPI(), nil
+}
+
+func (s *SyncService) GetNodeDetails(id string) (gin.H, error) {
+	var node models.Node
+	if err := s.nodeRepo.GetWithDetails(id, &node); err != nil {
+		return nil, fmt.Errorf("failed to get node details: %w", err)
+	}
+	return node.ToDetailedAPI(), nil
+}
+
+func (s *SyncService) GetProductDetails(id string) (gin.H, error) {
+	var product models.Product
+	if err := s.productRepo.GetWithDetails(id, &product); err != nil {
+		return nil, fmt.Errorf("failed to get product details: %w", err)
+	}
+	return product.ToDetailedAPI(), nil
+}
+
+func (s *SyncService) GetFunctionBlockDetails(id string) (gin.H, error) {
+	var fb models.FunctionBlock
+	if err := s.fbRepo.GetWithDetails(id, &fb); err != nil {
+		return nil, fmt.Errorf("failed to get function block details: %w", err)
+	}
+	return fb.ToDetailedAPI(), nil
+}
+func (s *SyncService) GetProjectsWithHierarchy() ([]models.Project, error) {
+	var projects []models.Project
+	err := s.projectRepo.GetAllWithHierarchy(&projects)
+	return projects, err
+}
+
+func (s *SyncService) GetTreeData() ([]gin.H, error) {
+	var projects []models.Project
+	if err := s.projectRepo.GetAllWithHierarchy(&projects); err != nil {
+		return nil, fmt.Errorf("failed to load projects: %w", err)
+	}
+
+	var treeData []gin.H
+	for _, p := range projects {
+		treeData = append(treeData, p.ToAPI())
+	}
+
+	return treeData, nil
+}
 func (s *SyncService) syncNodesAndProducts(signals []models.Signal) error {
 	// Собираем уникальные узлы и продукты из сигналов
 	nodeSystemMap := make(map[string]string)    // nodeName -> systemName

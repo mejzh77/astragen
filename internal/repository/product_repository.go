@@ -68,3 +68,8 @@ func (r *ProductRepository) LinkToSystem(product *models.Product, systemID uint)
 	product.SystemID = &systemID
 	return r.db.Model(product).Update("system_id", systemID).Error
 }
+func (r *ProductRepository) GetWithDetails(id string, product *models.Product) error {
+	return r.db.
+		Preload("System").
+		First(product, id).Error
+}

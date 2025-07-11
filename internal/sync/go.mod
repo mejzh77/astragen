@@ -11,6 +11,7 @@ replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
 replace github.com/mejzh77/astragen/internal/repository => ../repository
 
 require (
+	github.com/gin-gonic/gin v1.10.1
 	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/repository v0.0.0-00010101000000-000000000000
@@ -29,7 +30,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.10.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect

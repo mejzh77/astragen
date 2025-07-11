@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 
@@ -38,75 +39,89 @@ func main() {
 		log.Fatalf("Database initialization failed: %v", err)
 	}
 	defer closeDB(db)
+	var syncService *sync.SyncService
+	if config.Cfg.Update {
 
-	if !config.Cfg.Update {
-		log.Println("Update flag is false, exiting")
-		return
+		// 3. Инициализация сервисов
+		log.Println("Initializing services...")
+		ctx := context.Background()
+		creds, err := os.ReadFile("credentials.json")
+		if err != nil {
+			log.Fatalf("Failed to read credentials file: %v", err)
+		}
+
+		sheetsService, err := gsheets.NewService(ctx, creds)
+		if err != nil {
+			log.Fatalf("Failed to create Google Sheets service: %v", err)
+		}
+		// 4. Полная синхронизация с логированием
+		log.Println("Starting full sync process...")
+
+		syncService = sync.NewSyncService(sheetsService, db)
+		// 4.2. Синхронизация сигналов
+		log.Println("Syncing signals...")
+		signals, err := syncService.LoadAndSaveSignals(ctx)
+		if err != nil {
+			log.Fatalf("Failed to sync signals: %v", err)
+		}
+		logSignals(db)
+
+		// 4.1. Синхронизация проектов и систем
+		log.Println("Syncing projects and systems...")
+		if err := syncService.SyncSystemsFromSignals(signals); err != nil {
+			log.Fatalf("Failed to sync projects and systems: %v", err)
+		}
+		logProjectsAndSystems(db)
+		// 4.3. Синхронизация узлов (поддержка нескольких систем)
+		log.Println("Syncing nodes...")
+		if err := syncService.SyncNodes(signals); err != nil {
+			log.Fatalf("Failed to sync nodes: %v", err)
+		}
+		logNodes(db)
+
+		// 4.4. Синхронизация продуктов
+		log.Println("Syncing products...")
+		if err := syncService.SyncProducts(signals); err != nil {
+			log.Fatalf("Failed to sync products: %v", err)
+		}
+		logProducts(db)
+
+		// 4.5. Синхронизация функциональных блоков
+		log.Println("Syncing function blocks...")
+		if err := syncService.SyncFunctionBlocks(signals); err != nil {
+			log.Fatalf("Failed to sync function blocks: %v", err)
+		}
+		logFunctionBlocks(db)
+
+		log.Println("Sync completed successfully!")
+	} else {
+
+		syncService = sync.NewSyncService(nil, db)
 	}
 
-	// 3. Инициализация сервисов
-	log.Println("Initializing services...")
-	ctx := context.Background()
-	creds, err := os.ReadFile("credentials.json")
-	if err != nil {
-		log.Fatalf("Failed to read credentials file: %v", err)
-	}
-
-	sheetsService, err := gsheets.NewService(ctx, creds)
-	if err != nil {
-		log.Fatalf("Failed to create Google Sheets service: %v", err)
-	}
-
-	syncService := sync.NewSyncService(sheetsService, db)
-
-	// 4. Полная синхронизация с логированием
-	log.Println("Starting full sync process...")
-
-	// 4.2. Синхронизация сигналов
-	log.Println("Syncing signals...")
-	signals, err := syncService.LoadAndSaveSignals(ctx)
-	if err != nil {
-		log.Fatalf("Failed to sync signals: %v", err)
-	}
-	logSignals(db)
-
-	// 4.1. Синхронизация проектов и систем
-	log.Println("Syncing projects and systems...")
-	if err := syncService.SyncSystemsFromSignals(signals); err != nil {
-		log.Fatalf("Failed to sync projects and systems: %v", err)
-	}
-	logProjectsAndSystems(db)
-	// 4.3. Синхронизация узлов (поддержка нескольких систем)
-	log.Println("Syncing nodes...")
-	if err := syncService.SyncNodes(signals); err != nil {
-		log.Fatalf("Failed to sync nodes: %v", err)
-	}
-	logNodes(db)
-
-	// 4.4. Синхронизация продуктов
-	log.Println("Syncing products...")
-	if err := syncService.SyncProducts(signals); err != nil {
-		log.Fatalf("Failed to sync products: %v", err)
-	}
-	logProducts(db)
-
-	// 4.5. Синхронизация функциональных блоков
-	log.Println("Syncing function blocks...")
-	if err := syncService.SyncFunctionBlocks(signals); err != nil {
-		log.Fatalf("Failed to sync function blocks: %v", err)
-	}
-	logFunctionBlocks(db)
-
-	log.Println("Sync completed successfully!")
-
-	// Создание веб-сервиса
 	webService := api.NewWebService(syncService)
 
 	// Настройка роутера
 	r := gin.Default()
+
+	// Добавляем функцию для шаблонов
+	r.SetFuncMap(template.FuncMap{
+		"hasChildren": func(item interface{}) bool {
+			m, ok := item.(map[string]interface{})
+			if !ok {
+				return false
+			}
+			return m["systems"] != nil || m["nodes"] != nil ||
+				m["products"] != nil || m["functionBlocks"] != nil
+		},
+	})
+	r.LoadHTMLGlob("templates/*")
+	r.Static("/static", "./static")
+
 	webService.RegisterRoutes(r)
 
 	// Запуск сервера
+	log.Println("Starting server on :8080")
 	log.Fatal(r.Run(":8080"))
 }
 

@@ -39,3 +39,10 @@ func (r *SystemRepository) GetSystemByName(name string) (*models.System, error) 
 	}
 	return &system, nil
 }
+func (r *SystemRepository) GetWithDetails(id string, system *models.System) error {
+	return r.db.
+		Preload("Nodes").
+		Preload("Products").
+		Preload("FunctionBlocks.Variables").
+		First(system, id).Error
+}
