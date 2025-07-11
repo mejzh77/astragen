@@ -1,0 +1,29 @@
+db:
+  host: "localhost"
+  port: "5432"
+  user: "user"
+  password: "advengauser"
+  name: "astragen"
+  ssl_mode: "disable"
+
+spreadsheet_id: "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
+update: true
+function_blocks:
+  MTR:
+    in:
+      SWON: "pumpOn"
+      FAULT: "pumpFault"
+    out:
+      ON_CTL: "start"
+  MTR_ChRP:
+    in:
+      MTRSWON: "motorOn"
+    out:
+      ON_CTL_MOTOR: "motorStart"
+  VALVE:
+    in:
+      LSO: "opened"
+      LSC: "closed"
+    out:
+      OPN_CTL: "open"
+      CLS_CTL: "close"

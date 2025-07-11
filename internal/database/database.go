@@ -49,6 +49,9 @@ func autoMigrate(db *gorm.DB) error {
 		&models.Signal{},
 		&models.Product{},
 		&models.Node{},
+		&models.FunctionBlock{},
+		&models.FBVariable{},
+		&models.Project{},
 		// Добавьте другие модели по мере необходимости
 	}
 

@@ -18,7 +18,8 @@ type SignalRepository struct {
 func NewSignalRepository(db *gorm.DB) *SignalRepository {
 	return &SignalRepository{db: db}
 }
-func (r *SignalRepository) SaveSignals(signals []models.Signal) error {
+
+func (r *SignalRepository) SaveSignals(signals []models.Signal, debug bool) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		for _, signal := range signals {
 			// Нормализация всех строковых полей
@@ -30,7 +31,9 @@ func (r *SignalRepository) SaveSignals(signals []models.Signal) error {
 			}
 
 			// Включаем логирование SQL запроса
-			tx = tx.Debug()
+			if debug {
+				tx = tx.Debug()
+			}
 
 			result := tx.Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "tag"}},
@@ -72,7 +75,6 @@ func normalizeString(s string) string {
 	return builder.String()
 }
 
-// truncateUTF8 безопасно обрезает строку до n символов, не разрывая UTF-8 последовательности
 func truncateUTF8(s string, n int) string {
 	if len(s) <= n {
 		return s
@@ -87,26 +89,6 @@ func truncateUTF8(s string, n int) string {
 	return string(runes[:n])
 }
 
-//func (r *SignalRepository) SaveSignals(signals []models.Signal) error {
-//return r.db.Transaction(func(tx *gorm.DB) error {
-//for _, signal := range signals {
-//// Upsert операция - обновляем если существует запись с таким же Tag
-//if len(signal.NodeRef) > 50 {
-//signal.NodeRef = signal.NodeRef[:50]
-//}
-//result := tx.Clauses(clause.OnConflict{
-//Columns:   []clause.Column{{Name: "tag"}},
-//DoUpdates: clause.AssignmentColumns(getUpdateColumns(signal.SignalType)),
-//}).Create(&signal)
-
-//if result.Error != nil {
-
-// return fmt.Errorf("failed to save signal %s: %w", signal.Tag, result.Error)
-// }
-// }
-// return nil
-// })
-// }
 func getUpdateColumns(signalType string) []string {
 	base := []string{
 		"system", "equipment", "name", "module", "channel",

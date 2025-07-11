@@ -3,10 +3,10 @@ module github.com/mejzh77/astragen
 go 1.24.4
 
 require (
+	github.com/mejzh77/astragen/configs/config v0.0.0-20250710070021-b6f0df724e15
 	github.com/mejzh77/astragen/internal/database v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
-	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.0
+	github.com/mejzh77/astragen/internal/sync v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -26,9 +26,8 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000 // indirect
 	github.com/mejzh77/astragen/internal/repository v0.0.0-00010101000000-000000000000 // indirect
-	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000 // indirect
+	github.com/mejzh77/astragen/pkg/models v0.0.0-20250710070021-b6f0df724e15 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
@@ -44,6 +43,9 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/driver/postgres v1.6.0 // indirect
+	gorm.io/gorm v1.30.0 // indirect
 )
 
 replace github.com/mejzh77/astragen/internal/gsheets => ./internal/gsheets
@@ -53,5 +55,7 @@ replace github.com/mejzh77/astragen/configs/config => ./configs/config
 replace github.com/mejzh77/astragen/pkg/models => ./pkg/models
 
 replace github.com/mejzh77/astragen/internal/repository => ./internal/repository
+
+replace github.com/mejzh77/astragen/internal/sync => ./internal/sync
 
 replace github.com/mejzh77/astragen/internal/database => ./internal/database

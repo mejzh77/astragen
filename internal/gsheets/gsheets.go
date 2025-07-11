@@ -8,27 +8,15 @@ import (
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-	"gorm.io/gorm"
 
-	"github.com/mejzh77/astragen/configs/config"
-	"github.com/mejzh77/astragen/internal/repository"
-	"github.com/mejzh77/astragen/pkg/models"
 	"google.golang.org/api/sheets/v4"
 )
 
-type GoogleSheetsService struct {
-	service    *sheets.Service
-	signalRepo *repository.SignalRepository
+type Service struct {
+	client *sheets.Service
 }
 
-func NewGoogleSheetsService(client *sheets.Service, db *gorm.DB) *GoogleSheetsService {
-	return &GoogleSheetsService{
-		service:    client,
-		signalRepo: repository.NewSignalRepository(db),
-	}
-}
-
-func NewService(ctx context.Context, credentialsJSON []byte) (*sheets.Service, error) {
+func NewService(ctx context.Context, credentialsJSON []byte) (*Service, error) {
 	client, err := google.JWTConfigFromJSON(
 		credentialsJSON,
 		sheets.SpreadsheetsReadonlyScope,
@@ -42,64 +30,15 @@ func NewService(ctx context.Context, credentialsJSON []byte) (*sheets.Service, e
 		return nil, fmt.Errorf("failed to create sheets service: %w", err)
 	}
 
-	return srv, nil
+	return &Service{client: srv}, nil
 }
 
-func (s *GoogleSheetsService) ReadSheet(spreadsheetID, readRange string) ([][]interface{}, error) {
-	resp, err := s.service.Spreadsheets.Values.Get(spreadsheetID, readRange).Do()
+func (s *Service) ReadSheet(spreadsheetID, readRange string) ([][]interface{}, error) {
+	resp, err := s.client.Spreadsheets.Values.Get(spreadsheetID, readRange).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read sheet: %w", err)
 	}
 	return resp.Values, nil
-}
-
-func (s *GoogleSheetsService) RunSync(ctx context.Context) error {
-	var allSignals []models.Signal
-	for _, sheetCfg := range config.AppConfig.Sheets {
-		// 1. Чтение данных из листа
-		readRange, err := GetRange(sheetCfg.SheetName, sheetCfg.Model, true)
-		if err != nil {
-			return fmt.Errorf("failed to GetRange for sheet %s: %w", sheetCfg.SheetName, err)
-		}
-
-		rows, err := s.ReadSheet(config.AppConfig.SpreadsheetID, readRange)
-		if err != nil {
-			return fmt.Errorf("failed to read sheet %s: %w", sheetCfg.SheetName, err)
-		}
-
-		// 2. Парсинг в соответствующую модель
-		modelSlice := reflect.New(reflect.SliceOf(reflect.TypeOf(sheetCfg.Model).Elem()))
-		if err := Unmarshal(rows, modelSlice.Interface()); err != nil {
-			return fmt.Errorf("failed to unmarshal sheet %s: %w", sheetCfg.SheetName, err)
-		}
-
-		// 3. Преобразование в Signal
-		for i := 0; i < modelSlice.Elem().Len(); i++ {
-			item := modelSlice.Elem().Index(i).Addr().Interface()
-			var signal models.Signal
-
-			switch v := item.(type) {
-			case *models.DI:
-				signal.FromDI(*v)
-			case *models.AI:
-				signal.FromAI(*v)
-			case *models.DO:
-				signal.FromDO(*v)
-			case *models.AO:
-				signal.FromAO(*v)
-			}
-
-			signal.SignalType = sheetCfg.SheetName
-			allSignals = append(allSignals, signal)
-		}
-	}
-
-	// 4. Сохранение в БД
-	if err := s.signalRepo.SaveSignals(allSignals); err != nil {
-		return fmt.Errorf("failed to save signals: %w", err)
-	}
-
-	return nil
 }
 
 // GetRange формирует диапазон для чтения данных из Google Sheets

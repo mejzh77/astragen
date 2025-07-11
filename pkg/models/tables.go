@@ -3,10 +3,54 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
 )
+
+// Product представляет изделие
+type Product struct {
+	gorm.Model
+	PN         string   `gorm:"size:100"`
+	ProjectPos string   `gorm:"size:100"`
+	Name       string   `gorm:"size:200"`
+	GenPlan    string   `gorm:"size:100"`
+	Location   string   `gorm:"size:200"`
+	SystemID   *uint    `gorm:"index"`
+	System     *System  `gorm:"foreignKey:SystemID"`
+	Signals    []Signal `gorm:"foreignKey:ProductID"`
+}
+
+// Node представляет узел системы
+type Node struct {
+	gorm.Model
+	Name           string          `gorm:"size:255"`
+	Tag            string          `gorm:"size:100"`
+	SystemID       *uint           `gorm:"index"`
+	System         *System         `gorm:"foreignKey:SystemID"`
+	FunctionBlocks []FunctionBlock `gorm:"foreignKey:NodeID"`
+}
+
+// System представляет систему
+type System struct {
+	ID        uint   `gorm:"primaryKey"`
+	Name      string `gorm:"size:255;not null"`
+	ProjectID uint   `gorm:"not null"`
+	Nodes     []Node
+	Products  []Product
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+// Project представляет проект
+type Project struct {
+	gorm.Model
+	Name        string   `gorm:"size:255;not null"`
+	Description string   `gorm:"type:TEXT"`
+	Systems     []System `gorm:"foreignKey:ProjectID"`
+}
 
 type Signal struct {
 	gorm.Model
@@ -61,21 +105,6 @@ type Signal struct {
 	// Метаданные
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
-}
-type Product struct {
-	ID         int    `gorm:"primaryKey" gsheets:"id"`
-	PN         string `gorm:"size:100" gsheets:"pn"`
-	ProjectPos string `gorm:"size:100" gsheets:"project_pos"`
-	Name       string `gorm:"size:200" gsheets:"name"`
-	GenPlan    string `gorm:"size:100" gsheets:"gen_plan"`
-	Location   string `gorm:"size:200" gsheets:"location"`
-}
-
-type Node struct {
-	ID   int    `gorm:"primaryKey" gsheets:"id"`
-	Main string `gorm:"size:100" gsheets:"main"`
-	Sub1 string `gorm:"size:100" gsheets:"sub1"`
-	Sub2 string `gorm:"size:100" gsheets:"sub2"`
 }
 
 // Base и другие структуры остаются как у вас, только убираем gorm теги:
@@ -235,12 +264,88 @@ func (s *Signal) FromDI(di DI) {
 // Аналогичные методы FromDO и FromAO
 func (s *Signal) FromDO(do DO) {
 	s.SignalType = "DO"
-	// ... аналогично FromDI ...
+	// Копируем общие поля из Base
+	s.Tag = do.Tag
+	s.System = do.System
+	s.Equipment = do.Equipment
+	s.Name = do.Name
+	s.Module = do.Module
+	s.Channel = do.Channel
+	s.Crate = do.Crate
+	s.Place = do.Place
+	s.Property = do.Property
+	s.Address = do.Adr
+	s.ModbusAddr = do.ModbusAddr
+	s.NodeRef = do.NodeID
+	s.FB = do.FB
+	s.CheckStatus = do.CheckStatus
+	s.Comment = do.Comment
 }
 
 func (s *Signal) FromAO(ao AO) {
 	s.SignalType = "AO"
-	// ... аналогично FromAI ...
+	s.Tag = ao.Tag
+	s.System = ao.System
+	s.Equipment = ao.Equipment
+	s.Name = ao.Name
+	s.Module = ao.Module
+	s.Channel = ao.Channel
+	s.Crate = ao.Crate
+	s.Place = ao.Place
+	s.Property = ao.Property
+	s.Address = ao.Adr
+	s.ModbusAddr = ao.ModbusAddr
+	s.NodeRef = ao.NodeID
+	s.FB = ao.FB
+	s.CheckStatus = ao.CheckStatus
+	s.Comment = ao.Comment
+}
+
+// FunctionBlock представляет функциональный блок
+type FunctionBlock struct {
+	gorm.Model
+	Tag       string       `gorm:"size:255;not null;uniqueIndex"`
+	System    string       `gorm:"size:100"`
+	CdsType   string       `gorm:"size:50"`
+	NodeID    *uint        `gorm:"index"`
+	Node      *Node        `gorm:"foreignKey:NodeID"`
+	Variables []FBVariable `gorm:"foreignKey:FBID"`
+}
+
+type FBVariable struct {
+	gorm.Model
+	FBID      uint   `gorm:"index"`
+	Direction string `gorm:"size:10;check:direction IN ('input', 'output')"`
+	Signal    Signal `gorm:"foreignKey:SignalTag;references:Tag"`
+	SignalTag string `gorm:"size:255;not null"`
+	FuncAttr  string `gorm:"size:100;not null"` // Часть после последнего '_' в Tag сигнала
+}
+
+// ParseFBInfo разбирает тэг сигнала на имя FB и атрибут
+func ParseFBInfo(signalTag string) (fbTag, funcAttr string, ok bool) {
+	parts := strings.Split(signalTag, "_")
+	if len(parts) < 2 {
+		return "", "", false
+	}
+	return strings.Join(parts[:len(parts)-1], "_"), parts[len(parts)-1], true
+}
+
+// ParseFBFromSignal создает/обновляет FunctionBlock из сигнала
+func ParseFBFromSignal(signal Signal, direction string) (*FunctionBlock, *FBVariable) {
+	fbTag, funcAttr, _ := ParseFBInfo(signal.Tag)
+	fb := &FunctionBlock{
+		Tag:     fbTag,
+		System:  signal.System,
+		CdsType: signal.FB,
+	}
+
+	variable := &FBVariable{
+		SignalTag: signal.Tag,
+		FuncAttr:  funcAttr,
+		Direction: direction,
+	}
+
+	return fb, variable
 }
 
 // Кастомный парсер для булевых полей

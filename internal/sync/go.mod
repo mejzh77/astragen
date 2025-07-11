@@ -1,11 +1,20 @@
-module github.com/mejzh77/astragen/internal/gsheets
+module github.com/mejzh77/astragen/internal/sync
 
 go 1.24.4
 
+replace github.com/mejzh77/astragen/internal/gsheets => ../gsheets
+
+replace github.com/mejzh77/astragen/configs/config => ../../configs/config
+
+replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
+
+replace github.com/mejzh77/astragen/internal/repository => ../repository
+
 require (
+	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000
+	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/repository v0.0.0-00010101000000-000000000000
-	golang.org/x/oauth2 v0.30.0
-	google.golang.org/api v0.239.0
+	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000
 	gorm.io/gorm v1.30.0
 )
 
@@ -22,8 +31,6 @@ require (
 	github.com/googleapis/gax-go/v2 v2.14.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000 // indirect
-	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
 	go.opentelemetry.io/otel v1.36.0 // indirect
@@ -31,16 +38,12 @@ require (
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
+	google.golang.org/api v0.239.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
-
-replace github.com/mejzh77/astragen/internal/repository => ../../internal/repository
-
-replace github.com/mejzh77/astragen/configs/config => ../../configs/config
