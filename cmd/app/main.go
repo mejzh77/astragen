@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mejzh77/astragen/configs/config"
+	"github.com/mejzh77/astragen/internal/api"
 	"github.com/mejzh77/astragen/internal/database"
 	"github.com/mejzh77/astragen/internal/gsheets"
 	"github.com/mejzh77/astragen/internal/sync"
@@ -96,6 +98,16 @@ func main() {
 	logFunctionBlocks(db)
 
 	log.Println("Sync completed successfully!")
+
+	// Создание веб-сервиса
+	webService := api.NewWebService(syncService)
+
+	// Настройка роутера
+	r := gin.Default()
+	webService.RegisterRoutes(r)
+
+	// Запуск сервера
+	log.Fatal(r.Run(":8080"))
 }
 
 func closeDB(db *gorm.DB) {

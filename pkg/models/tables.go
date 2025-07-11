@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -34,14 +35,15 @@ type Node struct {
 
 // System представляет систему
 type System struct {
-	ID        uint   `gorm:"primaryKey"`
-	Name      string `gorm:"size:255;not null"`
-	ProjectID uint   `gorm:"not null"`
-	Nodes     []Node
-	Products  []Product
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID             uint   `gorm:"primaryKey"`
+	Name           string `gorm:"size:255;not null"`
+	ProjectID      uint   `gorm:"not null"`
+	Nodes          []Node
+	Products       []Product
+	FunctionBlocks []FunctionBlock `gorm:"foreignKey:SystemID"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
 }
 
 // Project представляет проект
@@ -50,6 +52,88 @@ type Project struct {
 	Name        string   `gorm:"size:255;not null"`
 	Description string   `gorm:"type:TEXT"`
 	Systems     []System `gorm:"foreignKey:ProjectID"`
+}
+
+// pkg/models/project.go
+func (p *Project) ToAPI() gin.H {
+	return gin.H{
+		"id":      p.ID,
+		"name":    p.Name,
+		"systems": p.SystemsToAPI(),
+	}
+}
+
+func (p *Project) SystemsToAPI() []gin.H {
+	var systems []gin.H
+	for _, s := range p.Systems {
+		systems = append(systems, s.ToAPI())
+	}
+	return systems
+}
+func (s *System) ToAPI() gin.H {
+	return gin.H{
+		"id":             s.ID,
+		"name":           s.Name,
+		"projectId":      s.ProjectID,
+		"nodes":          s.NodesToAPI(),
+		"products":       s.ProductsToAPI(),
+		"functionBlocks": s.FunctionBlocksToAPI(),
+	}
+}
+
+func (s *System) ProductsToAPI() []gin.H {
+	var products []gin.H
+	for _, p := range s.Products {
+		products = append(products, gin.H{
+			"id":        p.ID,
+			"name":      p.Name,
+			"systemId":  p.SystemID,
+			"createdAt": p.CreatedAt,
+		})
+	}
+	return products
+}
+
+func (s *System) FunctionBlocksToAPI() []gin.H {
+	var fbs []gin.H
+	for _, fb := range s.FunctionBlocks {
+		fbs = append(fbs, gin.H{
+			"id":        fb.ID,
+			"tag":       fb.Tag,
+			"system":    fb.System,
+			"cdsType":   fb.CdsType,
+			"variables": fb.VariablesToAPI(),
+		})
+	}
+	return fbs
+}
+
+func (fb *FunctionBlock) VariablesToAPI() []gin.H {
+	var vars []gin.H
+	for _, v := range fb.Variables {
+		vars = append(vars, gin.H{
+			"id":        v.ID,
+			"direction": v.Direction,
+			"signalTag": v.SignalTag,
+			"funcAttr":  v.FuncAttr,
+			"fbId":      v.FBID,
+		})
+	}
+	return vars
+}
+func (s *System) NodesToAPI() []gin.H {
+	var nodes []gin.H
+	for _, n := range s.Nodes {
+		nodes = append(nodes, n.ToAPI())
+	}
+	return nodes
+}
+func (n *Node) ToAPI() gin.H {
+	return gin.H{
+		"id":       n.ID,
+		"name":     n.Name,
+		"systemId": n.SystemID,
+	}
 }
 
 type Signal struct {

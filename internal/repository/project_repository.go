@@ -52,7 +52,15 @@ func (r *ProjectRepository) LinkSystemToProject(systemName string, systemType st
 
 	return system, nil
 }
-
+func (r *ProjectRepository) GetAllWithHierarchy() ([]models.Project, error) {
+	var projects []models.Project
+	err := r.db.
+		Preload("Systems.Nodes").
+		Preload("Systems.Products").
+		Preload("Systems.FunctionBlocks").
+		Find(&projects).Error
+	return projects, err
+}
 func (r *ProjectRepository) LinkProductToSystem(productName string, systemName string) (*models.Product, error) {
 	system, err := r.LinkSystemToProject(systemName, "product")
 	if err != nil {
