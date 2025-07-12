@@ -1,18 +1,9 @@
-// Функции преобразования данных (теперь чисто JavaScript)
-function mapNodesToTree(nodes) {
-    return nodes.map(n => ({
-        id: n.id,
-        name: n.name,
-        type: 'node',
-        // ... другие поля
-    }));
-}
-
-function mapProductsToTree(products) {
-    return products.map(p => ({
-        id: p.id,
-        name: p.name, 
-        type: 'product',
+// Функции преобразования данных
+function mapItemsToTree(items, type) {
+    return items.map(item => ({
+        id: item.id,
+        name: item.name,
+        type: type,
         // ... другие поля
     }));
 }
@@ -24,6 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             renderTree(data);
             initTreeBehavior();
+            // Сворачиваем всё дерево при загрузке
+            document.querySelectorAll('.tree ul').forEach(ul => {
+                if (ul !== document.querySelector('.tree > ul')) {
+                    ul.style.display = 'none';
+                }
+            });
         });
 });
 
@@ -36,29 +33,61 @@ function buildTreeHTML(items) {
     return `<ul>${
         items.map(item => `
         <li data-id="${item.id}" data-type="${item.type}">
-            <span class="toggle">${
-                hasChildren(item) ? '+' : ''
-            }</span>
+            <span class="toggle">${hasChildren(item) ? '+' : ''}</span>
             <span class="item-name">${item.name}</span>
             ${
-                item.systems ? buildTreeHTML(item.systems) :
-                item.nodes ? buildTreeHTML(item.nodes) :  // Убрал mapNodesToTree
-                item.products ? buildTreeHTML(item.products) :  // Убрал mapProductsToTree
+                item.systems ? buildSystemHTML(item) :
+                item.nodes || item.products ? buildNodesProductsHTML(item) :
                 item.functionBlocks ? buildTreeHTML(item.functionBlocks) : ''
             }
         </li>`).join('')
     }</ul>`;
 }
 
+function buildSystemHTML(system) {
+    let html = '';
+    if (system.nodes || system.products) {
+        html += '<ul>';
+        if (system.nodes) {
+            html += `
+            <li data-type="nodes-category">
+                <span class="toggle">+</span>
+                <span class="item-name">Узлы</span>
+                ${buildTreeHTML(mapItemsToTree(system.nodes, 'node'))}
+            </li>`;
+        }
+        if (system.products) {
+            html += `
+            <li data-type="products-category">
+                <span class="toggle">+</span>
+                <span class="item-name">Изделия</span>
+                ${buildTreeHTML(mapItemsToTree(system.products, 'product'))}
+            </li>`;
+        }
+        html += '</ul>';
+    }
+    return html;
+}
+
+function buildNodesProductsHTML(item) {
+    let html = '';
+    if (item.nodes) {
+        html += buildTreeHTML(mapItemsToTree(item.nodes, 'node'));
+    }
+    if (item.products) {
+        html += buildTreeHTML(mapItemsToTree(item.products, 'product'));
+    }
+    return html;
+}
+
 function hasChildren(item) {
-    return (item.systems && item.systems.length > 0) || 
-           (item.nodes && item.nodes.length > 0) || 
-           (item.products && item.products.length > 0) || 
+    return (item.systems && item.systems.length > 0) ||
+           (item.nodes && item.nodes.length > 0) ||
+           (item.products && item.products.length > 0) ||
            (item.functionBlocks && item.functionBlocks.length > 0);
 }
 
 function initTreeBehavior() {
-    // Обработчик для всего дерева
     document.getElementById('tree').addEventListener('click', function(e) {
         const toggle = e.target.closest('.toggle');
         if (toggle) {
@@ -70,10 +99,10 @@ function initTreeBehavior() {
                 ul.style.display = ul.style.display === 'none' ? 'block' : 'none';
                 toggle.textContent = ul.style.display === 'none' ? '+' : '-';
             }
+            e.stopPropagation();
             return;
         }
         
-        // Обработка клика по элементу
         const itemName = e.target.closest('.item-name');
         if (itemName) {
             const li = itemName.closest('li');
@@ -82,19 +111,16 @@ function initTreeBehavior() {
             const itemId = li.dataset.id;
             const itemType = li.dataset.type;
             
-            if (!itemId || !itemType) {
-                console.error('Missing data attributes on:', li);
+            if (!itemId || !itemType || itemType === 'nodes-category' || itemType === 'products-category') {
                 return;
             }
 
-            console.log(`Loading details for ${itemType} ${itemId}`);
             loadDetails(itemType, itemId);
         }
     });
 }
 
 function loadDetails(type, id) {
-    console.log(`Fetching details for ${type}/${id}`);
     fetch(`/api/details?type=${type}&id=${id}`)
         .then(response => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -102,7 +128,7 @@ function loadDetails(type, id) {
         })
         .then(data => {
             document.getElementById('details-content').innerHTML = 
-                renderDetails(data, type);
+                renderDetailsTable(data, type);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -113,38 +139,63 @@ function loadDetails(type, id) {
         });
 }
 
-function renderDetails(data, type) {
+function renderDetailsTable(data, type) {
     let html = `<h3>${data.name || data.tag || 'Элемент'}</h3>`;
     html += `<p><strong>Тип:</strong> ${type}</p>`;
     
-    // Добавляем отладочную информацию
-    html += `<div class="debug-info">
-        <p><strong>Полученные данные:</strong></p>
-        <pre>${JSON.stringify(data, null, 2)}</pre>
-    </div>`;
+    // Таблица с основными свойствами
+    html += `<table class="details-table">
+        <thead>
+            <tr>
+                <th>Свойство</th>
+                <th>Значение</th>
+            </tr>
+        </thead>
+        <tbody>`;
     
     // Основные поля
     for (const [key, value] of Object.entries(data)) {
         if (value && typeof value === 'object') continue;
-        html += `<p><strong>${key}:</strong> ${value}</p>`;
+        html += `<tr>
+            <td><strong>${key}</strong></td>
+            <td>${value}</td>
+        </tr>`;
     }
     
-    // Специальные поля для разных типов
+    html += `</tbody></table>`;
+    
+    // Специальные секции для разных типов
     switch(type) {
         case 'system':
             if (data.project) {
                 html += `<h4>Проект</h4>
-                <p><strong>Название:</strong> ${data.project.name}</p>`;
+                <table class="details-table">
+                    <tr>
+                        <td><strong>Название</strong></td>
+                        <td>${data.project.name}</td>
+                    </tr>
+                </table>`;
             }
             break;
             
         case 'functionblock':
             if (data.variables && data.variables.length > 0) {
-                html += `<h4>Переменные</h4><ul>`;
+                html += `<h4>Переменные</h4>
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>Направление</th>
+                            <th>Сигнал</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
                 data.variables.forEach(v => {
-                    html += `<li>${v.direction}: ${v.signalTag}</li>`;
+                    html += `<tr>
+                        <td>${v.direction}</td>
+                        <td>${v.signalTag}</td>
+                    </tr>`;
                 });
-                html += `</ul>`;
+                html += `</tbody></table>`;
             }
             break;
     }

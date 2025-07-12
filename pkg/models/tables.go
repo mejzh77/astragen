@@ -471,31 +471,55 @@ func ParseFBFromSignal(signal Signal, direction string) (*FunctionBlock, *FBVari
 	return fb, variable
 }
 
-// pkg/models/project.go
+// Для Project
 func (p *Project) ToAPI() gin.H {
 	return gin.H{
 		"id":      p.ID,
 		"name":    p.Name,
+		"type":    "project",
 		"systems": p.SystemsToAPI(),
 	}
 }
 
+// Для System
+func (s *System) ToAPI() gin.H {
+	return gin.H{
+		"id":             s.ID,
+		"name":           s.Name,
+		"type":           "system",
+		"projectId":      s.ProjectID,
+		"nodes":          s.NodesToAPI(),
+		"products":       s.ProductsToAPI(),
+		"functionBlocks": s.FunctionBlocksToAPI(),
+	}
+}
+
+// Для Node
+func (n *Node) ToAPI() gin.H {
+	return gin.H{
+		"id":       n.ID,
+		"name":     n.Name,
+		"type":     "node",
+		"systemId": n.SystemID,
+	}
+}
+
+// Для FunctionBlock
+func (fb *FunctionBlock) ToAPI() gin.H {
+	return gin.H{
+		"id":        fb.ID,
+		"tag":       fb.Tag,
+		"type":      "functionblock",
+		"system":    fb.System,
+		"variables": fb.VariablesToAPI(),
+	}
+}
 func (p *Project) SystemsToAPI() []gin.H {
 	var systems []gin.H
 	for _, s := range p.Systems {
 		systems = append(systems, s.ToAPI())
 	}
 	return systems
-}
-func (s *System) ToAPI() gin.H {
-	return gin.H{
-		"id":             s.ID,
-		"name":           s.Name,
-		"projectId":      s.ProjectID,
-		"nodes":          s.NodesToAPI(),
-		"products":       s.ProductsToAPI(),
-		"functionBlocks": s.FunctionBlocksToAPI(),
-	}
 }
 
 func (s *System) ProductsToAPI() []gin.H {
@@ -544,11 +568,4 @@ func (s *System) NodesToAPI() []gin.H {
 		nodes = append(nodes, n.ToAPI())
 	}
 	return nodes
-}
-func (n *Node) ToAPI() gin.H {
-	return gin.H{
-		"id":       n.ID,
-		"name":     n.Name,
-		"systemId": n.SystemID,
-	}
 }
