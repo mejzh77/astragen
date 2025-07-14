@@ -14,36 +14,72 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             renderTree(data);
-            initTreeBehavior();
-            // Сворачиваем всё дерево при загрузке
-            document.querySelectorAll('.tree ul').forEach(ul => {
-                if (ul !== document.querySelector('.tree > ul')) {
-                    ul.style.display = 'none';
-                }
-            });
+            setTimeout(initTreeBehavior, 0); 
         });
 });
 
+// Добавьте проверку данных при рендеринге
 function renderTree(data) {
+    console.log("Tree data:", JSON.stringify(data, null, 2)); // Проверьте структуру
     const container = document.getElementById('tree');
     container.innerHTML = buildTreeHTML(data);
 }
-
 function buildTreeHTML(items) {
-    return `<ul>${
-        items.map(item => `
-        <li data-id="${item.id}" data-type="${item.type}">
-            <span class="toggle">${hasChildren(item) ? '+' : ''}</span>
-            <span class="item-name">${item.name}</span>
-            ${
-                item.systems ? buildSystemHTML(item) :
-                item.nodes || item.products ? buildNodesProductsHTML(item) :
-                item.functionBlocks ? buildTreeHTML(item.functionBlocks) : ''
-            }
-        </li>`).join('')
-    }</ul>`;
+    if (!items || !items.length) return '';
+
+    return `
+    <ul>
+        ${items.map(item => {
+            const hasChildren = checkHasChildren(item);
+            return `
+            <li data-id="${item.id}" data-type="${item.type}">
+                <span class="toggle">${hasChildren ? '+' : ''}</span>
+                <span class="item-name">${item.name}</span>
+                ${hasChildren ? buildChildrenHTML(item) : ''}
+            </li>`;
+        }).join('')}
+    </ul>`;
 }
 
+function checkHasChildren(item) {
+    return (item.systems && item.systems.length > 0) ||
+           (item.nodes && item.nodes.length > 0) ||
+           (item.products && item.products.length > 0) ||
+           (item.functionBlocks && item.functionBlocks.length > 0);
+}
+
+function buildChildrenHTML(item) {
+    if (item.systems) {
+        return buildTreeHTML(item.systems);
+    }
+    
+    // Для систем сначала показываем категории "Узлы" и "Изделия"
+    if (item.type === 'system') {
+        return `
+        <ul>
+            ${item.nodes ? `
+            <li data-type="category" data-category="nodes">
+                <span class="toggle">+</span>
+                <span class="item-name">Узлы</span>
+                ${buildTreeHTML(item.nodes)}
+            </li>` : ''}
+            
+            ${item.products ? `
+            <li data-type="category" data-category="products">
+                <span class="toggle">+</span>
+                <span class="item-name">Изделия</span>
+                ${buildTreeHTML(item.products)}
+            </li>` : ''}
+        </ul>`;
+    }
+    
+    // Для остальных случаев
+    if (item.nodes) return buildTreeHTML(item.nodes);
+    if (item.products) return buildTreeHTML(item.products);
+    if (item.functionBlocks) return buildTreeHTML(item.functionBlocks);
+    
+    return '';
+}
 function buildSystemHTML(system) {
     let html = '';
     if (system.nodes || system.products) {
@@ -88,7 +124,16 @@ function hasChildren(item) {
 }
 
 function initTreeBehavior() {
-    document.getElementById('tree').addEventListener('click', function(e) {
+    const treeContainer = document.getElementById('tree');
+    if (!treeContainer) return;
+
+    // Инициализация - сворачиваем все поддеревья
+    treeContainer.querySelectorAll('ul ul').forEach(ul => {
+        ul.style.display = 'none';
+    });
+
+    // Обработчик кликов
+    treeContainer.addEventListener('click', function(e) {
         const toggle = e.target.closest('.toggle');
         if (toggle) {
             const li = toggle.closest('li');
@@ -96,30 +141,29 @@ function initTreeBehavior() {
             
             const ul = li.querySelector('ul');
             if (ul) {
-                ul.style.display = ul.style.display === 'none' ? 'block' : 'none';
-                toggle.textContent = ul.style.display === 'none' ? '+' : '-';
+                const isHidden = window.getComputedStyle(ul).display === 'none';
+                console.log(ul.style.display); 
+                // Применяем изменения
+                ul.style.display = isHidden ? 'block' : 'none';
+                toggle.textContent = isHidden ? '-' : '+';
             }
             e.stopPropagation();
             return;
         }
-        
+
+        // Обработка кликов по элементам (если нужно)
         const itemName = e.target.closest('.item-name');
         if (itemName) {
             const li = itemName.closest('li');
-            if (!li) return;
+            const itemId = li?.dataset?.id;
+            const itemType = li?.dataset?.type;
             
-            const itemId = li.dataset.id;
-            const itemType = li.dataset.type;
-            
-            if (!itemId || !itemType || itemType === 'nodes-category' || itemType === 'products-category') {
-                return;
+            if (itemId && itemType && itemType !== 'category') {
+                loadDetails(itemType, itemId);
             }
-
-            loadDetails(itemType, itemId);
         }
     });
 }
-
 function loadDetails(type, id) {
     fetch(`/api/details?type=${type}&id=${id}`)
         .then(response => {

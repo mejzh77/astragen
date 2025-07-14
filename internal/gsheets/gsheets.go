@@ -105,6 +105,28 @@ func calculateColumns(typ reflect.Type) int {
 	return count
 }
 
+// В internal/gsheets/service.go
+func (s *Service) Load(spreadsheetID string, sheetName string, dest interface{}) error {
+	// 1. Определяем диапазон для чтения
+	readRange, err := GetRange(sheetName, dest, false)
+	if err != nil {
+		return fmt.Errorf("failed to get range: %w", err)
+	}
+
+	// 2. Читаем данные из таблицы
+	rows, err := s.ReadSheet(spreadsheetID, readRange)
+	if err != nil {
+		return fmt.Errorf("failed to read sheet: %w", err)
+	}
+
+	// 3. Парсим данные в целевую структуру
+	if err := Unmarshal(rows, dest); err != nil {
+		return fmt.Errorf("failed to unmarshal data: %w", err)
+	}
+
+	return nil
+}
+
 // columnToLetter преобразует номер колонки в буквенное обозначение (1 -> A, 26 -> Z, 27 -> AA)
 func columnToLetter(col int) string {
 	letter := ""

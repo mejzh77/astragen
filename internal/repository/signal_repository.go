@@ -51,6 +51,22 @@ func (r *SignalRepository) SaveSignals(signals []models.Signal, debug bool) erro
 	})
 }
 
+// UpdateSignalNodes обновляет связи сигналов с узлами
+func (r *SignalRepository) UpdateSignalNodes(signals []models.Signal) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, signal := range signals {
+			if signal.NodeID == nil {
+				continue
+			}
+			if err := tx.Model(&models.Signal{}).
+				Where("id = ?", signal.ID).
+				Update("node_id", signal.NodeID).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
 func normalizeString(s string) string {
 	if s == "" {
 		return s

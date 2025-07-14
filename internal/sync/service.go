@@ -52,8 +52,24 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 			return fmt.Errorf("failed to sync system %s: %w", sysConfig, err)
 		}
 	}
+	// 2. Загрузка и сохранение узлов
+	nodes, err := s.loadNodesFromSheets(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to load nodes: %w", err)
+	}
+	if err := s.nodeRepo.BulkUpsert(nodes); err != nil {
+		return fmt.Errorf("failed to save nodes: %w", err)
+	}
 
-	// 2. Синхронизация сигналов
+	// 3. Загрузка и сохранение изделий
+	products, err := s.loadProductsFromSheets(ctx)
+	fmt.Println("qwewqe")
+	if err != nil {
+		return fmt.Errorf("failed to load products: %w", err)
+	}
+	if err := s.productRepo.BulkUpsert(products); err != nil {
+		return fmt.Errorf("failed to save products: %w", err)
+	} // 2. Синхронизация сигналов
 	allSignals, err := s.loadSignalsFromSheets(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to load signals: %w", err)
@@ -68,13 +84,14 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 		return fmt.Errorf("failed to sync function blocks: %w", err)
 	}
 
-	// 4. Синхронизация узлов и продуктов
-	if err := s.syncNodesAndProducts(allSignals); err != nil {
-		return fmt.Errorf("failed to sync nodes and products: %w", err)
+	// 5. Связывание сигналов с узлами и изделиями (с нечётким сопоставлением)
+	if err := s.LinkSignalsWithFuzzyMatching(allSignals); err != nil {
+		return fmt.Errorf("failed to link signals: %w", err)
 	}
 
 	return nil
 }
+
 func (s *SyncService) GetProjectDetails(id string) (gin.H, error) {
 	var project models.Project
 	if err := s.projectRepo.GetWithDetails(id, &project); err != nil {
@@ -236,6 +253,29 @@ func (s *SyncService) SyncFunctionBlocks(signals []models.Signal) error {
 	}
 	return nil
 }
+func (s *SyncService) loadNodesFromSheets(ctx context.Context) ([]models.Node, error) {
+	var sheetNodes []models.SheetNode
+
+	if err := s.gsheets.Load(config.Cfg.SpreadsheetID, config.Cfg.NodeSheet, &sheetNodes); err != nil {
+		return nil, fmt.Errorf("failed to load nodes: %w", err)
+	}
+	fmt.Println(sheetNodes)
+	var nodes []models.Node
+	for _, sn := range sheetNodes {
+		system, err := s.systemRepo.GetSystemByName(sn.System)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get system %s: %w", sn.System, err)
+		}
+
+		nodes = append(nodes, models.Node{
+			Name:     sn.Name,
+			Tag:      sn.Tag,
+			SystemID: &system.ID,
+		})
+	}
+
+	return nodes, nil
+}
 func (s *SyncService) loadSignalsFromSheets(ctx context.Context) ([]models.Signal, error) {
 	var allSignals []models.Signal
 
@@ -259,6 +299,82 @@ func (s *SyncService) loadSignalsFromSheets(ctx context.Context) ([]models.Signa
 	}
 
 	return allSignals, nil
+}
+func (s *SyncService) loadProductsFromSheets(ctx context.Context) ([]models.Product, error) {
+	var sheetProducts []models.SheetProduct
+
+	if err := s.gsheets.Load(config.Cfg.SpreadsheetID, config.Cfg.ProductSheet, &sheetProducts); err != nil {
+		return nil, fmt.Errorf("failed to load products: %w", err)
+	}
+	fmt.Printf("Products: %#v", sheetProducts)
+	var products []models.Product
+	for _, sp := range sheetProducts {
+		system, err := s.systemRepo.GetSystemByName(sp.System)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get system %s: %w", sp.System, err)
+		}
+
+		products = append(products, models.Product{
+			PN:       sp.PN,
+			Name:     sp.Name,
+			Location: sp.Location,
+			SystemID: &system.ID,
+		})
+	}
+
+	return products, nil
+}
+func (s *SyncService) findBestNodeMatch(nodeName string, systemID uint) (*models.Node, error) {
+	// 1. Попробовать точное совпадение
+	if node, err := s.nodeRepo.FindByNameAndSystem(nodeName, systemID); err == nil {
+		return node, nil
+	}
+
+	// 2. Поиск похожих узлов в системе
+	nodes, err := s.nodeRepo.FindSimilarInSystem(nodeName, systemID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(nodes) > 0 {
+		// Возвращаем наиболее похожий узел
+		return &nodes[0], nil
+	}
+
+	// 3. Создать новый узел, если не найдено совпадений
+	newNode := &models.Node{
+		Name:     nodeName,
+		SystemID: &systemID,
+	}
+	if err := s.nodeRepo.Create(newNode); err != nil {
+		return nil, err
+	}
+
+	return newNode, nil
+}
+func (s *SyncService) LinkSignalsWithFuzzyMatching(signals []models.Signal) error {
+	for i, signal := range signals {
+		if signal.NodeRef == "" {
+			continue
+		}
+
+		system, err := s.systemRepo.GetSystemByName(signal.System)
+		if err != nil {
+			return fmt.Errorf("failed to get system %s: %w", signal.System, err)
+		}
+
+		// Находим наиболее подходящий узел
+		node, err := s.findBestNodeMatch(signal.NodeRef, system.ID)
+		if err != nil {
+			return fmt.Errorf("failed to find node for %s: %w", signal.NodeRef, err)
+		}
+
+		// Обновляем ссылку в сигнале
+		signals[i].NodeID = &node.ID
+	}
+
+	// Сохраняем обновленные сигналы
+	return s.signalRepo.UpdateSignalNodes(signals)
 }
 
 // SyncSystemsFromSignals создает системы на основе данных из сигналов

@@ -5,7 +5,8 @@ db:
   password: "advengauser"
   name: "astragen"
   ssl_mode: "disable"
-
+nodesheet: Узлы (копия)
+productsheet: Изделия
 spreadsheet_id: "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
 update: true
 function_blocks:

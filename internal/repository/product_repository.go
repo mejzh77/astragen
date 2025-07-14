@@ -42,6 +42,14 @@ func (r *ProductRepository) CreateOrUpdate(product *models.Product) error {
 	})
 }
 
+// BulkUpsert создает или обновляет изделия пачкой
+func (r *ProductRepository) BulkUpsert(products []models.Product) error {
+	return r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "pn"}, {Name: "system_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"name", "location"}),
+	}).Create(&products).Error
+}
+
 // repository/product_repository.go
 
 func (r *ProductRepository) Upsert(product *models.Product) error {

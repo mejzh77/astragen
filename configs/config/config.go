@@ -24,7 +24,6 @@ type SheetConfig struct {
 	SignalType string      `yaml:"signal_type"` // "DI", "AI", "DO", "AO"
 	Model      interface{} `yaml:"-"`           // Указатель на модель (не для YAML)
 }
-
 type VarsConfig struct {
 	In  map[string]string `yaml:"in"`
 	Out map[string]string `yaml:"out"`
@@ -39,6 +38,9 @@ type AppConfig struct {
 	Sheets         []SheetConfig  `yaml:"sheets"`
 	FunctionBlocks FBConfig       `yaml:"function_blocks"`
 	Systems        []string       `yaml:"systems"`
+	NodeSheet      string         `yaml:"nodesheet"`
+
+	ProductSheet string `yaml:"productsheet"`
 }
 
 // LoadConfig загружает конфиг из файла

@@ -64,7 +64,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to sync signals: %v", err)
 		}
-		logSignals(db)
+		//logSignals(db)
 
 		// 4.1. Синхронизация проектов и систем
 		log.Println("Syncing projects and systems...")
@@ -91,7 +91,7 @@ func main() {
 		if err := syncService.SyncFunctionBlocks(signals); err != nil {
 			log.Fatalf("Failed to sync function blocks: %v", err)
 		}
-		logFunctionBlocks(db)
+		//logFunctionBlocks(db)
 
 		log.Println("Sync completed successfully!")
 	} else {

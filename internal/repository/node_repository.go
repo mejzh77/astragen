@@ -6,6 +6,7 @@ import (
 	"github.com/mejzh77/astragen/pkg/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type NodeRepository struct {
@@ -63,4 +64,45 @@ func (r *NodeRepository) GetWithDetails(id string, node *models.Node) error {
 	return r.db.
 		Preload("System").
 		First(node, id).Error
+}
+
+// В node_repository.go
+func (r *NodeRepository) FindSimilarInSystem(name string, systemID uint) ([]models.Node, error) {
+	var nodes []models.Node
+
+	// Используем полнотекстовый поиск или similarity-функции
+	// Пример для PostgreSQL:
+	query := `SELECT * FROM nodes 
+              WHERE system_id = ? 
+              ORDER BY similarity(name, ?) DESC 
+              LIMIT 3`
+
+	if err := r.db.Raw(query, systemID, name).Scan(&nodes).Error; err != nil {
+		return nil, err
+	}
+
+	return nodes, nil
+}
+
+// BulkUpsert создает или обновляет узлы пачкой
+func (r *NodeRepository) BulkUpsert(nodes []models.Node) error {
+	return r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}, {Name: "system_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"tag"}),
+	}).Create(&nodes).Error
+}
+
+// FindByNameAndSystem ищет узел по точному совпадению имени и системы
+func (r *NodeRepository) FindByNameAndSystem(name string, systemID uint) (*models.Node, error) {
+	var node models.Node
+	err := r.db.Where("name = ? AND system_id = ?", name, systemID).First(&node).Error
+	if err != nil {
+		return nil, err
+	}
+	return &node, nil
+}
+
+// Create создает новый узел
+func (r *NodeRepository) Create(node *models.Node) error {
+	return r.db.Create(node).Error
 }

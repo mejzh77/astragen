@@ -13,11 +13,11 @@ import (
 // Product представляет изделие
 type Product struct {
 	gorm.Model
-	PN         string   `gorm:"size:100"`
-	ProjectPos string   `gorm:"size:100"`
-	Name       string   `gorm:"size:200"`
-	GenPlan    string   `gorm:"size:100"`
-	Location   string   `gorm:"size:200"`
+	PN         string   `gorm:"size:100" gsheets:"pn"`
+	ProjectPos string   `gorm:"size:100" gsheets:"project_pos"`
+	Name       string   `gorm:"size:200" gsheets:"name"`
+	GenPlan    string   `gorm:"size:100" gsheets:"gen_plan"`
+	Location   string   `gorm:"size:200" gsheets:"location"`
 	SystemID   *uint    `gorm:"index"`
 	System     *System  `gorm:"foreignKey:SystemID"`
 	Signals    []Signal `gorm:"foreignKey:ProductID"`
@@ -26,20 +26,37 @@ type Product struct {
 // Node представляет узел системы
 type Node struct {
 	gorm.Model
-	Name           string          `gorm:"size:255"`
-	Tag            string          `gorm:"size:100"`
+	Name           string          `gorm:"size:255" gsheets:"name"`
+	Tag            string          `gorm:"size:100" gsheets:"tag"`
 	SystemID       *uint           `gorm:"index"`
 	System         *System         `gorm:"foreignKey:SystemID"`
 	FunctionBlocks []FunctionBlock `gorm:"foreignKey:NodeID"`
 }
 
+// Модель для загрузки узлов из Google Sheets
+type SheetNode struct {
+	Name   string `gsheets:"Обозначение"`
+	Tag    string `gsheets:"Тэг"`
+	System string `gsheets:"system"`
+	// Другие поля по необходимости
+}
+
+// Модель для загрузки изделий из Google Sheets
+type SheetProduct struct {
+	PN       string `gsheets:"Заводской номер"`
+	Name     string `gsheets:"Проектная позиция"`
+	System   string `gsheets:"Система"`
+	Location string `gsheets:"Название размещения"`
+	// Другие поля по необходимости
+}
+
 // System представляет систему
 type System struct {
-	ID             uint   `gorm:"primaryKey"`
-	Name           string `gorm:"size:255;not null"`
-	ProjectID      uint   `gorm:"not null"`
-	Nodes          []Node
-	Products       []Product
+	ID             uint            `gorm:"primaryKey"`
+	Name           string          `gorm:"size:255;not null"`
+	ProjectID      uint            `gorm:"not null"`
+	Nodes          []Node          `gorm:"foreignKey:SystemID"`
+	Products       []Product       `gorm:"foreignKey:SystemID"`
 	FunctionBlocks []FunctionBlock `gorm:"foreignKey:SystemID"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
@@ -332,6 +349,7 @@ func ParseFBInfo(signalTag string) (fbTag, funcAttr string, ok bool) {
 	}
 	return strings.Join(parts[:len(parts)-1], "_"), parts[len(parts)-1], true
 }
+
 func (p *Project) ToDetailedAPI() gin.H {
 	return gin.H{
 		"id":        p.ID,
@@ -350,6 +368,7 @@ func (p *Project) SystemsToDetailedAPI() []gin.H {
 	}
 	return systems
 }
+
 func (s *System) ToDetailedAPI() gin.H {
 	return gin.H{
 		"id":        s.ID,
@@ -514,6 +533,7 @@ func (fb *FunctionBlock) ToAPI() gin.H {
 		"variables": fb.VariablesToAPI(),
 	}
 }
+
 func (p *Project) SystemsToAPI() []gin.H {
 	var systems []gin.H
 	for _, s := range p.Systems {
@@ -562,6 +582,7 @@ func (fb *FunctionBlock) VariablesToAPI() []gin.H {
 	}
 	return vars
 }
+
 func (s *System) NodesToAPI() []gin.H {
 	var nodes []gin.H
 	for _, n := range s.Nodes {
