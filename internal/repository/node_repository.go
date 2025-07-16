@@ -72,17 +72,16 @@ func (r *NodeRepository) LinkFunctionBlock(node *models.Node, fb *models.Functio
 }
 
 // В node_repository.go
-func (r *NodeRepository) FindSimilarInSystem(name string, systemID uint) ([]models.Node, error) {
+func (r *NodeRepository) FindSimilarInSystem(name string) ([]models.Node, error) {
 	var nodes []models.Node
 
 	// Используем полнотекстовый поиск или similarity-функции
 	// Пример для PostgreSQL:
-	query := `SELECT * FROM nodes 
-              WHERE system_id = ? 
+	query := `SELECT * FROM nodes
               ORDER BY similarity(name, ?) DESC 
               LIMIT 3`
 
-	if err := r.db.Raw(query, systemID, name).Scan(&nodes).Error; err != nil {
+	if err := r.db.Raw(query, name).Scan(&nodes).Error; err != nil {
 		return nil, err
 	}
 
@@ -98,9 +97,9 @@ func (r *NodeRepository) BulkUpsert(nodes []models.Node) error {
 }
 
 // FindByNameAndSystem ищет узел по точному совпадению имени и системы
-func (r *NodeRepository) FindByNameAndSystem(name string, systemID uint) (*models.Node, error) {
+func (r *NodeRepository) FindByName(name string) (*models.Node, error) {
 	var node models.Node
-	err := r.db.Where("name = ? AND system_id = ?", name, systemID).First(&node).Error
+	err := r.db.Where("name = ?", name).First(&node).Error
 	if err != nil {
 		return nil, err
 	}

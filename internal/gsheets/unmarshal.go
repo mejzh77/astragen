@@ -140,7 +140,6 @@ func Unmarshal(rows [][]any, v any) error {
 	}
 	// Создаем карту: имя колонки -> индекс
 	headers := rows[0]
-	fmt.Println(headers)
 	parser := NewParser(headers)
 	parser.SetTimeFormat(time.RFC3339) // Устанавливаем формат времени
 	// Парсим каждую строку

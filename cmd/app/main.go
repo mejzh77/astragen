@@ -34,7 +34,7 @@ func main() {
 		config.Cfg.DB.SSLMode,
 	)
 
-	db, err := database.InitDB(dsn)
+	db, err := database.InitDB(dsn, true)
 	if err != nil {
 		log.Fatalf("Database initialization failed: %v", err)
 	}

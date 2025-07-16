@@ -1,5 +1,5 @@
 db:
-  host: "localhost"
+  host: "192.168.0.119"
   port: "5432"
   user: "user"
   password: "advengauser"
@@ -9,6 +9,11 @@ nodesheet: Узлы (копия)
 productsheet: Изделия
 spreadsheet_id: "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
 update: true
+systems:
+  - RSU_7
+  - PAZ_7
+  - RSU_12
+  - PAZ_12
 function_blocks:
   MTR:
     in:
