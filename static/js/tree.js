@@ -45,14 +45,15 @@ function checkHasChildren(item) {
     return (item.systems && item.systems.length > 0) ||
            (item.nodes && item.nodes.length > 0) ||
            (item.products && item.products.length > 0) ||
-           (item.functionBlocks && item.functionBlocks.length > 0);
+           (item.functionBlocks && item.functionBlocks.length > 0) ||
+    (item.signals && item.signals.length > 0);
 }
 
 function buildChildrenHTML(item) {
     if (item.systems) {
         return buildTreeHTML(item.systems);
     }
-    
+    console.log(item) 
     // Для систем сначала показываем категории "Узлы" и "Изделия"
     if (item.type === 'system') {
         return `

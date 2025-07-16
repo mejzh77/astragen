@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/mejzh77/astragen/pkg/models"
@@ -45,16 +46,38 @@ func (r *ProductRepository) CreateOrUpdate(product *models.Product) error {
 // BulkUpsert создает или обновляет изделия пачкой
 func (r *ProductRepository) BulkUpsert(products []models.Product) error {
 	return r.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "pn"}, {Name: "system_id"}},
+		Columns: []clause.Column{
+			{Name: "pn"},
+			{Name: "system_id"}, // Составной уникальный ключ
+		},
 		DoUpdates: clause.AssignmentColumns([]string{"name", "location"}),
 	}).Create(&products).Error
+}
+func (r *ProductRepository) CheckConstraints() error {
+	var count int
+	if err := r.db.Raw(`
+        SELECT COUNT(*) 
+        FROM information_schema.table_constraints 
+        WHERE table_name = 'products' 
+        AND constraint_name = 'uc_products_pn_system'
+    `).Scan(&count).Error; err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return errors.New("unique constraint uc_products_pn_system does not exist")
+	}
+	return nil
 }
 
 // repository/product_repository.go
 
 func (r *ProductRepository) Upsert(product *models.Product) error {
 	return r.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "name"}},                 // Конфликт по имени
+		Columns: []clause.Column{
+			{Name: "name"},
+			{Name: "system_id"},
+		}, // Конфликт по имени
 		DoUpdates: clause.AssignmentColumns([]string{"system_id"}), // Обновляем только system_id
 	}).Create(product).Error
 }

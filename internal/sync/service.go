@@ -3,7 +3,9 @@ package sync
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mejzh77/astragen/configs/config"
@@ -44,7 +46,6 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to sync projects: %w", err)
 	}
-
 	// Синхронизация систем из конфига
 	for _, sysConfig := range config.Cfg.Systems {
 		_, err := s.systemRepo.LinkSystemToProject(sysConfig, project.ID)
@@ -57,15 +58,19 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to load nodes: %w", err)
 	}
-	if err := s.nodeRepo.BulkUpsert(nodes); err != nil {
+
+	if err := s.syncNodes(nodes); err != nil {
 		return fmt.Errorf("failed to save nodes: %w", err)
 	}
-
+	fmt.Println("qweqwe")
 	// 3. Загрузка и сохранение изделий
 	products, err := s.loadProductsFromSheets(ctx)
-	fmt.Println("qwewqe")
 	if err != nil {
 		return fmt.Errorf("failed to load products: %w", err)
+	}
+
+	if err := s.productRepo.CheckConstraints(); err != nil {
+		return fmt.Errorf("database constraints check failed: %w", err)
 	}
 	if err := s.productRepo.BulkUpsert(products); err != nil {
 		return fmt.Errorf("failed to save products: %w", err)
@@ -88,7 +93,9 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 	if err := s.LinkSignalsWithFuzzyMatching(allSignals); err != nil {
 		return fmt.Errorf("failed to link signals: %w", err)
 	}
-
+	if err := s.LinkFunctionBlocksToNodes(); err != nil {
+		return fmt.Errorf("failed to link signals: %w", err)
+	}
 	return nil
 }
 
@@ -110,8 +117,8 @@ func (s *SyncService) GetSystemDetails(id string) (gin.H, error) {
 
 func (s *SyncService) GetNodeDetails(id string) (gin.H, error) {
 	var node models.Node
-	if err := s.nodeRepo.GetWithDetails(id, &node); err != nil {
-		return nil, fmt.Errorf("failed to get node details: %w", err)
+	if err := s.nodeRepo.GetWithFBs(id, &node); err != nil {
+		return nil, err
 	}
 	return node.ToDetailedAPI(), nil
 }
@@ -157,10 +164,10 @@ func (s *SyncService) syncNodesAndProducts(signals []models.Signal) error {
 
 	for _, signal := range signals {
 		if signal.NodeRef != "" {
-			nodeSystemMap[signal.NodeRef] = signal.System
+			nodeSystemMap[signal.NodeRef] = signal.SystemRef
 		}
 		if signal.Product != nil && signal.Product.Name != "" {
-			productSystemMap[signal.Product.Name] = signal.System
+			productSystemMap[signal.Product.Name] = signal.SystemRef
 		}
 	}
 
@@ -216,7 +223,7 @@ func (s *SyncService) SyncProducts(signals []models.Signal) error {
 		if signal.Product != nil && signal.Product.Name != "" {
 			// Если продукт уже есть в мапе, не перезаписываем систему
 			if _, exists := productSystemMap[signal.Product.Name]; !exists {
-				productSystemMap[signal.Product.Name] = signal.System
+				productSystemMap[signal.Product.Name] = signal.SystemRef
 			}
 		}
 	}
@@ -245,11 +252,58 @@ func (s *SyncService) SyncProducts(signals []models.Signal) error {
 	return nil
 }
 
+// internal/sync/service.go
+func (s *SyncService) LinkFunctionBlocksToNodes() error {
+	// Получаем все функциональные блоки с узлами
+	var fbs []models.FunctionBlock
+	if err := s.fbRepo.GetAllWithNodes(&fbs); err != nil {
+		return fmt.Errorf("failed to get function blocks: %w", err)
+	}
+
+	for _, fb := range fbs {
+		if fb.NodeRef == "" {
+			continue
+		}
+		// Получаем систему функционального блока
+		var systemID uint
+		if fb.SystemID != nil {
+			systemID = *fb.SystemID
+		} else {
+			log.Printf("FB %s has no system assigned", fb.Tag)
+			continue
+		}
+		// Находим узел по имени (с нечетким поиском при необходимости)
+		node, err := s.findBestNodeMatch(fb.NodeRef, systemID)
+		if err != nil {
+			log.Printf("Warning: failed to find node for FB %s: %v", fb.Tag, err)
+			continue
+		}
+
+		// Связываем функциональный блок с узлом
+		if err := s.nodeRepo.LinkFunctionBlock(node, &fb); err != nil {
+			log.Printf("Warning: failed to link FB %s to node %s: %v", fb.Tag, node.Name, err)
+			continue
+		}
+
+		log.Printf("Linked FB %s to node %s", fb.Tag, node.Name)
+	}
+
+	return nil
+}
+
 // SyncFunctionBlocks синхронизирует функциональные блоки из сигналов
 // Это обертка вокруг SyncFBFromSignals с добавлением логирования
 func (s *SyncService) SyncFunctionBlocks(signals []models.Signal) error {
 	if err := s.fbRepo.SyncFBFromSignals(signals); err != nil {
 		return fmt.Errorf("failed to sync function blocks: %w", err)
+	}
+	return nil
+}
+func (s *SyncService) syncNodes(nodes []models.Node) error {
+	for _, node := range nodes {
+		if err := s.nodeRepo.SaveNodeWithSystems(&node); err != nil {
+			return fmt.Errorf("failed to save node %s: %w", node.Name, err)
+		}
 	}
 	return nil
 }
@@ -259,22 +313,48 @@ func (s *SyncService) loadNodesFromSheets(ctx context.Context) ([]models.Node, e
 	if err := s.gsheets.Load(config.Cfg.SpreadsheetID, config.Cfg.NodeSheet, &sheetNodes); err != nil {
 		return nil, fmt.Errorf("failed to load nodes: %w", err)
 	}
-	fmt.Println(sheetNodes)
+
 	var nodes []models.Node
 	for _, sn := range sheetNodes {
-		system, err := s.systemRepo.GetSystemByName(sn.System)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get system %s: %w", sn.System, err)
+		node := models.Node{
+			Name: sn.Name,
+			Tag:  sn.Tag,
 		}
 
-		nodes = append(nodes, models.Node{
-			Name:     sn.Name,
-			Tag:      sn.Tag,
-			SystemID: &system.ID,
-		})
+		// Обрабатываем системы
+		systemIDs := strings.Split(sn.Systems, ",")
+		for _, sysID := range systemIDs {
+			sysID = strings.TrimSpace(sysID)
+			if sysID == "" {
+				continue
+			}
+
+			system, err := s.systemRepo.GetSystemByName(sysID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get system %s: %w", sysID, err)
+			}
+			node.Systems = append(node.Systems, system)
+		}
+
+		nodes = append(nodes, node)
 	}
 
 	return nodes, nil
+}
+func (s *SyncService) processSignalSystems(signal models.Signal) error {
+	if signal.SystemRef == "" {
+		fmt.Println(signal.SystemRef)
+		return nil
+	}
+
+	system, err := s.systemRepo.GetSystemByName(signal.SystemRef)
+	if err != nil {
+		return fmt.Errorf("failed to get system %s: %w", signal.SystemRef, err)
+	}
+
+	signal.SystemID = &system.ID
+	signal.System = system
+	return nil
 }
 func (s *SyncService) loadSignalsFromSheets(ctx context.Context) ([]models.Signal, error) {
 	var allSignals []models.Signal
@@ -294,6 +374,9 @@ func (s *SyncService) loadSignalsFromSheets(ctx context.Context) ([]models.Signa
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse sheet %s: %w", sheetCfg.SheetName, err)
 		}
+		for _, signal := range signals {
+			s.processSignalSystems(signal)
+		}
 
 		allSignals = append(allSignals, signals...)
 	}
@@ -311,7 +394,8 @@ func (s *SyncService) loadProductsFromSheets(ctx context.Context) ([]models.Prod
 	for _, sp := range sheetProducts {
 		system, err := s.systemRepo.GetSystemByName(sp.System)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get system %s: %w", sp.System, err)
+			continue
+			//return nil, fmt.Errorf("failed to get system %s: %w", sp.System, err)
 		}
 
 		products = append(products, models.Product{
@@ -358,7 +442,7 @@ func (s *SyncService) LinkSignalsWithFuzzyMatching(signals []models.Signal) erro
 			continue
 		}
 
-		system, err := s.systemRepo.GetSystemByName(signal.System)
+		system, err := s.systemRepo.GetSystemByName(signal.SystemRef)
 		if err != nil {
 			return fmt.Errorf("failed to get system %s: %w", signal.System, err)
 		}
@@ -388,8 +472,8 @@ func (s *SyncService) SyncSystemsFromSignals(signals []models.Signal) error {
 	// 2. Собираем уникальные системы из сигналов
 	systemNames := make(map[string]struct{})
 	for _, signal := range signals {
-		if signal.System != "" {
-			systemNames[signal.System] = struct{}{}
+		if signal.SystemRef != "" {
+			systemNames[signal.SystemRef] = struct{}{}
 		}
 	}
 
@@ -466,8 +550,8 @@ func (s *SyncService) SyncNodes(signals []models.Signal) error {
 				nodeSystems[signal.NodeRef] = []string{}
 			}
 			// Добавляем систему, если ее еще нет в списке
-			if !contains(nodeSystems[signal.NodeRef], signal.System) {
-				nodeSystems[signal.NodeRef] = append(nodeSystems[signal.NodeRef], signal.System)
+			if !contains(nodeSystems[signal.NodeRef], signal.SystemRef) {
+				nodeSystems[signal.NodeRef] = append(nodeSystems[signal.NodeRef], signal.SystemRef)
 			}
 		}
 	}

@@ -59,39 +59,42 @@ func main() {
 
 		syncService = sync.NewSyncService(sheetsService, db)
 		// 4.2. Синхронизация сигналов
-		log.Println("Syncing signals...")
-		signals, err := syncService.LoadAndSaveSignals(ctx)
-		if err != nil {
-			log.Fatalf("Failed to sync signals: %v", err)
+		if err := syncService.RunFullSync(ctx); err != nil {
+			log.Fatalf("Failed to sync: %v", err)
 		}
-		//logSignals(db)
+		//log.Println("Syncing signals...")
+		//signals, err := syncService.LoadAndSaveSignals(ctx)
+		//if err != nil {
+		//log.Fatalf("Failed to sync signals: %v", err)
+		//}
+		////logSignals(db)
 
-		// 4.1. Синхронизация проектов и систем
-		log.Println("Syncing projects and systems...")
-		if err := syncService.SyncSystemsFromSignals(signals); err != nil {
-			log.Fatalf("Failed to sync projects and systems: %v", err)
-		}
-		logProjectsAndSystems(db)
-		// 4.3. Синхронизация узлов (поддержка нескольких систем)
-		log.Println("Syncing nodes...")
-		if err := syncService.SyncNodes(signals); err != nil {
-			log.Fatalf("Failed to sync nodes: %v", err)
-		}
-		logNodes(db)
+		//// 4.1. Синхронизация проектов и систем
+		//log.Println("Syncing projects and systems...")
+		//if err := syncService.SyncSystemsFromSignals(signals); err != nil {
+		//log.Fatalf("Failed to sync projects and systems: %v", err)
+		//}
+		//logProjectsAndSystems(db)
+		//// 4.3. Синхронизация узлов (поддержка нескольких систем)
+		//log.Println("Syncing nodes...")
+		//if err := syncService.SyncNodes(signals); err != nil {
+		//log.Fatalf("Failed to sync nodes: %v", err)
+		//}
+		//logNodes(db)
 
-		// 4.4. Синхронизация продуктов
-		log.Println("Syncing products...")
-		if err := syncService.SyncProducts(signals); err != nil {
-			log.Fatalf("Failed to sync products: %v", err)
-		}
-		logProducts(db)
+		//// 4.4. Синхронизация продуктов
+		//log.Println("Syncing products...")
+		//if err := syncService.SyncProducts(signals); err != nil {
+		//log.Fatalf("Failed to sync products: %v", err)
+		//}
+		//logProducts(db)
 
-		// 4.5. Синхронизация функциональных блоков
-		log.Println("Syncing function blocks...")
-		if err := syncService.SyncFunctionBlocks(signals); err != nil {
-			log.Fatalf("Failed to sync function blocks: %v", err)
-		}
-		//logFunctionBlocks(db)
+		//// 4.5. Синхронизация функциональных блоков
+		//log.Println("Syncing function blocks...")
+		//if err := syncService.SyncFunctionBlocks(signals); err != nil {
+		//log.Fatalf("Failed to sync function blocks: %v", err)
+		//}
+		////logFunctionBlocks(db)
 
 		log.Println("Sync completed successfully!")
 	} else {

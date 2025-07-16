@@ -46,3 +46,8 @@ func (r *SystemRepository) GetWithDetails(id string, system *models.System) erro
 		Preload("FunctionBlocks.Variables").
 		First(system, id).Error
 }
+func (r *SystemRepository) GetSystemByTag(tag string) (*models.System, error) {
+	var system models.System
+	err := r.db.Where("tag = ?", tag).First(&system).Error
+	return &system, err
+}

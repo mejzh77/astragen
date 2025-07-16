@@ -2,8 +2,11 @@ package gsheets
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
+	"sort"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2/google"
@@ -66,10 +69,28 @@ func GetRange(sheetName string, structTemplate interface{}, withHeader bool) (st
 
 	// Если количество столбцов больше 26 (Z), используем нотацию типа AA, AB и т.д.
 	endColumn := columnToLetter(numColumns)
-
 	// Для больших таблиц можно ограничить количество строк
 	// Например, 1000 строк данных + 1 строка заголовка
 	return fmt.Sprintf("%s!%s:%s", sheetName, startCell, endColumn), nil
+}
+func getAllHeaders(service *sheets.Service, spreadsheetID, sheetName string) ([]string, error) {
+	// Читаем только первую строку полностью
+	readRange := fmt.Sprintf("%s!1:1", sheetName)
+	resp, err := service.Spreadsheets.Values.Get(spreadsheetID, readRange).Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve headers: %v", err)
+	}
+
+	if len(resp.Values) == 0 {
+		return nil, errors.New("no headers found")
+	}
+
+	var headers []string
+	for _, cell := range resp.Values[0] {
+		headers = append(headers, fmt.Sprintf("%v", cell))
+	}
+
+	return headers, nil
 }
 
 // calculateColumns рекурсивно вычисляет количество столбцов в структуре
@@ -107,12 +128,41 @@ func calculateColumns(typ reflect.Type) int {
 
 // В internal/gsheets/service.go
 func (s *Service) Load(spreadsheetID string, sheetName string, dest interface{}) error {
+	//val := reflect.ValueOf(dest)
+	//if val.Kind() != reflect.Ptr || val.IsNil() {
+	//return &InvalidUnmarshalError{Type: reflect.TypeOf(dest)}
+	//}
+
+	//// Получаем тип элементов слайса
+	//sliceVal := val.Elem()
+	//if sliceVal.Kind() != reflect.Slice {
+	//return errors.New("gsheets: target must be a slice")
+	//}
+
+	//elemType := sliceVal.Type().Elem()
+	//if elemType.Kind() != reflect.Struct {
+	//return errors.New("gsheets: slice elements must be structs")
+	//}
+	//// Создаем экземпляр элемента для GetRange
+	//elem := reflect.New(elemType).Elem().Interface()
 	// 1. Определяем диапазон для чтения
-	readRange, err := GetRange(sheetName, dest, false)
+	// 1. Получаем ВСЕ заголовки из таблицы
+	allHeaders, err := getAllHeaders(s.client, spreadsheetID, sheetName)
 	if err != nil {
-		return fmt.Errorf("failed to get range: %w", err)
+		return fmt.Errorf("failed to get headers: %w", err)
 	}
 
+	// 2. Создаем карту заголовков
+	headerMap := make(map[string]int)
+	for i, header := range allHeaders {
+		headerMap[strings.TrimSpace(header)] = i
+	}
+
+	// 3. Определяем нужные колонки из структуры
+	neededColumns := getNeededColumns(dest)
+
+	// 4. Формируем диапазон чтения (все строки, только нужные колонки)
+	readRange := buildRange(sheetName, neededColumns, headerMap)
 	// 2. Читаем данные из таблицы
 	rows, err := s.ReadSheet(spreadsheetID, readRange)
 	if err != nil {
@@ -125,6 +175,48 @@ func (s *Service) Load(spreadsheetID string, sheetName string, dest interface{})
 	}
 
 	return nil
+}
+func getNeededColumns(dest interface{}) map[string]bool {
+	needed := make(map[string]bool)
+	val := reflect.ValueOf(dest).Elem()
+	typ := val.Type().Elem() // Тип элемента среза
+
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		tag := field.Tag.Get("gsheets")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		needed[strings.Split(tag, ",")[0]] = true
+	}
+	return needed
+}
+
+func buildRange(sheetName string, neededColumns map[string]bool, headerMap map[string]int) string {
+	var columns []string
+	for colName := range neededColumns {
+		if idx, exists := headerMap[colName]; exists {
+			colLetter := toColumnLetter(idx + 1) // +1 т.к. индексы с 0
+			columns = append(columns, colLetter)
+		}
+	}
+	sort.Strings(columns) // Сортируем для правильного порядка
+
+	if len(columns) == 0 {
+		return fmt.Sprintf("%s!A:Z", sheetName) // Дефолтный диапазон
+	}
+
+	return fmt.Sprintf("%s!%s:%s", sheetName, columns[0], columns[len(columns)-1])
+}
+
+func toColumnLetter(colNum int) string {
+	letter := ""
+	for colNum > 0 {
+		colNum--
+		letter = string(rune('A'+(colNum%26))) + letter
+		colNum /= 26
+	}
+	return letter
 }
 
 // columnToLetter преобразует номер колонки в буквенное обозначение (1 -> A, 26 -> Z, 27 -> AA)

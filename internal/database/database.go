@@ -1,8 +1,10 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/mejzh77/astragen/pkg/models"
 	"gorm.io/driver/postgres"
@@ -39,11 +41,58 @@ func InitDB(dsn string) (*gorm.DB, error) {
 	if err := autoMigrate(db); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate models: %w", err)
 	}
-
+	if err := AddUniqueConstraints(db); err != nil {
+		return nil, err
+	}
 	log.Println("Successfully connected to PostgreSQL database")
 	return db, nil
 }
+func AddUniqueConstraints(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Проверяем существование таблиц
+		if !tx.Migrator().HasTable("products") || !tx.Migrator().HasTable("nodes") {
+			return errors.New("required tables don't exist")
+		}
 
+		// Добавляем ограничения с проверкой существования
+		if err := addConstraintIfNotExists(tx,
+			"products",
+			"uc_products_pn_system",
+			"ALTER TABLE products ADD CONSTRAINT uc_products_pn_system UNIQUE (pn, system_id)"); err != nil {
+			return err
+		}
+
+		if err := addConstraintIfNotExists(tx,
+			"nodes",
+			"uc_nodes_name_system",
+			"ALTER TABLE nodes ADD CONSTRAINT uc_nodes_name_system UNIQUE (name, system_id)"); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+func addConstraintIfNotExists(db *gorm.DB, table, constraint, sql string) error {
+	if !constraintExists(db, table, constraint) {
+		if err := db.Exec(sql).Error; err != nil {
+			// Игнорируем ошибку "уже существует" для разных СУБД
+			if !strings.Contains(err.Error(), "already exists") &&
+				!strings.Contains(err.Error(), "существует") {
+				return fmt.Errorf("failed to add constraint %s: %w", constraint, err)
+			}
+		}
+	}
+	return nil
+}
+func constraintExists(db *gorm.DB, table, constraint string) bool {
+	var count int
+	db.Raw(`
+		SELECT COUNT(*) 
+		FROM information_schema.table_constraints 
+		WHERE table_name = ? AND constraint_name = ?
+	`, table, constraint).Scan(&count)
+	return count > 0
+}
 func autoMigrate(db *gorm.DB) error {
 	modelsToMigrate := []interface{}{
 		&models.Signal{},

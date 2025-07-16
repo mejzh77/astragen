@@ -76,7 +76,18 @@ func (r *FunctionBlockRepository) GetFBWithVariables(tag string) (*models.Functi
 	}
 	return &fb, nil
 }
+func (r *FunctionBlockRepository) GetAllWithNodes(fbs *[]models.FunctionBlock) error {
+	return r.db.Find(fbs).Error
+}
+func (r *FunctionBlockRepository) DebugCheckFunctionBlocks() {
+	var count int64
+	r.db.Model(&models.FunctionBlock{}).Count(&count)
+	log.Printf("Total function blocks in DB: %d", count)
 
+	var fbs []models.FunctionBlock
+	r.db.Limit(5).Find(&fbs)
+	log.Printf("Sample FBs: %+v", fbs)
+}
 func (r *FunctionBlockRepository) SyncFBFromSignals(signals []models.Signal) error {
 	// Собираем информацию о направлениях переменных из конфига
 	varDirections := make(map[string]string) // signalTag -> direction

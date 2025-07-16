@@ -28,8 +28,7 @@ func NewParser(headers []any) *Parser {
 
 	// Создаем нормализованную карту заголовков
 	for i, header := range headers {
-		normalized := p.normalizeHeader(header.(string))
-		p.headerMap[normalized] = i
+		p.headerMap[header.(string)] = i
 	}
 
 	return p
@@ -88,8 +87,7 @@ func (p *Parser) parseStruct(row []any, val reflect.Value) error {
 
 // getValue возвращает значение из строки по имени колонки
 func (p *Parser) getValue(row []any, columnName string) (string, bool) {
-	normalized := p.normalizeHeader(columnName)
-	idx, exists := p.headerMap[normalized]
+	idx, exists := p.headerMap[columnName]
 	if !exists {
 		return "", false
 	}
@@ -142,6 +140,7 @@ func Unmarshal(rows [][]any, v any) error {
 	}
 	// Создаем карту: имя колонки -> индекс
 	headers := rows[0]
+	fmt.Println(headers)
 	parser := NewParser(headers)
 	parser.SetTimeFormat(time.RFC3339) // Устанавливаем формат времени
 	// Парсим каждую строку

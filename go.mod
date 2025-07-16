@@ -4,13 +4,16 @@ go 1.24.4
 
 require (
 	github.com/gin-gonic/gin v1.10.1
+	gorm.io/gorm v1.30.0
+)
+
+require (
 	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/api v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/database v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/sync v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000
-	gorm.io/gorm v1.30.0
 )
 
 require (

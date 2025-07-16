@@ -13,12 +13,12 @@ import (
 // Product представляет изделие
 type Product struct {
 	gorm.Model
-	PN         string   `gorm:"size:100" gsheets:"pn"`
+	PN         string   `gorm:"size:100;uniqueIndex:idx_product_pn_system" gsheets:"pn"`
 	ProjectPos string   `gorm:"size:100" gsheets:"project_pos"`
 	Name       string   `gorm:"size:200" gsheets:"name"`
 	GenPlan    string   `gorm:"size:100" gsheets:"gen_plan"`
 	Location   string   `gorm:"size:200" gsheets:"location"`
-	SystemID   *uint    `gorm:"index"`
+	SystemID   *uint    `gorm:"index:idx_product_pn_system"`
 	System     *System  `gorm:"foreignKey:SystemID"`
 	Signals    []Signal `gorm:"foreignKey:ProductID"`
 }
@@ -26,18 +26,18 @@ type Product struct {
 // Node представляет узел системы
 type Node struct {
 	gorm.Model
-	Name           string          `gorm:"size:255" gsheets:"name"`
+	Name           string          `gorm:"size:255;uniqueIndex:idx_node_name_system" gsheets:"name"`
 	Tag            string          `gorm:"size:100" gsheets:"tag"`
-	SystemID       *uint           `gorm:"index"`
-	System         *System         `gorm:"foreignKey:SystemID"`
+	SystemID       *uint           `gorm:"index:idx_node_name_system"`
+	Systems        []*System       `gorm:"many2many:node_systems;"`
 	FunctionBlocks []FunctionBlock `gorm:"foreignKey:NodeID"`
 }
 
 // Модель для загрузки узлов из Google Sheets
 type SheetNode struct {
-	Name   string `gsheets:"Обозначение"`
-	Tag    string `gsheets:"Тэг"`
-	System string `gsheets:"system"`
+	Name    string `gsheets:"Обозначение"`
+	Tag     string `gsheets:"Тэг"`
+	Systems string `gsheets:"Система"`
 	// Другие поля по необходимости
 }
 
@@ -55,7 +55,7 @@ type System struct {
 	ID             uint            `gorm:"primaryKey"`
 	Name           string          `gorm:"size:255;not null"`
 	ProjectID      uint            `gorm:"not null"`
-	Nodes          []Node          `gorm:"foreignKey:SystemID"`
+	Nodes          []*Node         `gorm:"many2many:node_systems;"`
 	Products       []Product       `gorm:"foreignKey:SystemID"`
 	FunctionBlocks []FunctionBlock `gorm:"foreignKey:SystemID"`
 	CreatedAt      time.Time
@@ -83,21 +83,23 @@ type Signal struct {
 	Node   *Node `gorm:"foreignKey:NodeID"`
 
 	// Основные поля (из Base)
-	Tag         string `gorm:"uniqueIndex;not null"` // Соответствует Base.Tag
-	System      string `gorm:"index;size:50"`
-	Equipment   string `gorm:"size:100;not null"`
-	Name        string `gorm:"size:200;index"`
-	Module      string `gorm:"size:100"`
-	Channel     string `gorm:"size:50"`
-	Crate       string `gorm:"size:50"`
-	Place       string `gorm:"index;size:150"`
-	Property    string `gorm:"type:TEXT"`
-	Address     string `gorm:"size:50"` // Соответствует Base.Adr
-	ModbusAddr  string `gorm:"index"`
-	NodeRef     string `gorm:"size:255;index"` // Соответствует Base.NodeID
-	FB          string `gorm:"size:50"`        // Function Block
-	CheckStatus string `gorm:"size:20"`
-	Comment     string `gorm:"type:TEXT"`
+	Tag         string  `gorm:"uniqueIndex;not null"` // Соответствует Base.Tag
+	SystemID    *uint   `gorm:"index"`                // Внешний ключ
+	System      *System `gorm:"foreignKey:SystemID"`  // Связь
+	SystemRef   string  `gorm:"-"`                    // Временное поле для загрузки из Google Sheets
+	Equipment   string  `gorm:"size:100;not null"`
+	Name        string  `gorm:"size:200;index"`
+	Module      string  `gorm:"size:100"`
+	Channel     string  `gorm:"size:50"`
+	Crate       string  `gorm:"size:50"`
+	Place       string  `gorm:"index;size:150"`
+	Property    string  `gorm:"type:TEXT"`
+	Address     string  `gorm:"size:50"` // Соответствует Base.Adr
+	ModbusAddr  string  `gorm:"index"`
+	NodeRef     string  `gorm:"size:255;index"` // Соответствует Base.NodeID
+	FB          string  `gorm:"size:50"`        // Function Block
+	CheckStatus string  `gorm:"size:20"`
+	Comment     string  `gorm:"type:TEXT"`
 
 	// Поля для всех типов сигналов
 	SignalType string  `gorm:"size:2;index"` // DI, AI, DO, AO
@@ -217,7 +219,7 @@ func (s *Signal) FromAI(ai AI) {
 
 	// Копируем общие поля из Base
 	s.Tag = ai.Tag
-	s.System = ai.System
+	s.SystemRef = ai.System
 	s.Equipment = ai.Equipment
 	s.Name = ai.Name
 	s.Module = ai.Module
@@ -251,7 +253,7 @@ func (s *Signal) FromDI(di DI) {
 
 	// Копируем общие поля из Base
 	s.Tag = di.Tag
-	s.System = di.System
+	s.SystemRef = di.System
 	s.Equipment = di.Equipment
 	s.Name = di.Name
 	s.Module = di.Module
@@ -285,7 +287,7 @@ func (s *Signal) FromDO(do DO) {
 	s.SignalType = "DO"
 	// Копируем общие поля из Base
 	s.Tag = do.Tag
-	s.System = do.System
+	s.SystemRef = do.System
 	s.Equipment = do.Equipment
 	s.Name = do.Name
 	s.Module = do.Module
@@ -304,7 +306,7 @@ func (s *Signal) FromDO(do DO) {
 func (s *Signal) FromAO(ao AO) {
 	s.SignalType = "AO"
 	s.Tag = ao.Tag
-	s.System = ao.System
+	s.SystemRef = ao.System
 	s.Equipment = ao.Equipment
 	s.Name = ao.Name
 	s.Module = ao.Module
@@ -324,9 +326,10 @@ func (s *Signal) FromAO(ao AO) {
 type FunctionBlock struct {
 	gorm.Model
 	Tag       string       `gorm:"size:255;not null;uniqueIndex"`
-	System    string       `gorm:"size:100"`
+	System    *System      `gorm:"foreignKey:SystemID"`
 	CdsType   string       `gorm:"size:50"`
 	NodeID    *uint        `gorm:"index"`
+	NodeRef   string       `gorm:"size:255"`
 	SystemID  *uint        `gorm:"index"`
 	Node      *Node        `gorm:"foreignKey:NodeID"`
 	Variables []FBVariable `gorm:"foreignKey:FBID"`
@@ -426,6 +429,7 @@ func (n *Node) ToDetailedAPI() gin.H {
 	return gin.H{
 		"id":        n.ID,
 		"name":      n.Name,
+		"type":      "node",
 		"systemId":  n.SystemID,
 		"createdAt": n.CreatedAt,
 		"updatedAt": n.UpdatedAt,
@@ -437,6 +441,7 @@ func (p *Product) ToDetailedAPI() gin.H {
 	return gin.H{
 		"id":        p.ID,
 		"name":      p.Name,
+		"type":      "product",
 		"systemId":  p.SystemID,
 		"createdAt": p.CreatedAt,
 		"updatedAt": p.UpdatedAt,
@@ -446,8 +451,10 @@ func (p *Product) ToDetailedAPI() gin.H {
 // Для FunctionBlock
 func (fb *FunctionBlock) ToDetailedAPI() gin.H {
 	return gin.H{
-		"id":        fb.ID,
-		"tag":       fb.Tag,
+		"id":  fb.ID,
+		"tag": fb.Tag,
+
+		"type":      "functionblock",
 		"system":    fb.System,
 		"cdsType":   fb.CdsType,
 		"createdAt": fb.CreatedAt,
@@ -479,6 +486,7 @@ func ParseFBFromSignal(signal Signal, direction string) (*FunctionBlock, *FBVari
 		Tag:     fbTag,
 		System:  signal.System,
 		CdsType: signal.FB,
+		Node:    signal.Node,
 	}
 
 	variable := &FBVariable{
@@ -503,23 +511,23 @@ func (p *Project) ToAPI() gin.H {
 // Для System
 func (s *System) ToAPI() gin.H {
 	return gin.H{
-		"id":             s.ID,
-		"name":           s.Name,
-		"type":           "system",
-		"projectId":      s.ProjectID,
-		"nodes":          s.NodesToAPI(),
-		"products":       s.ProductsToAPI(),
-		"functionBlocks": s.FunctionBlocksToAPI(),
+		"id":        s.ID,
+		"name":      s.Name,
+		"type":      "system",
+		"projectId": s.ProjectID,
+		"nodes":     s.NodesToAPI(),
+		"products":  s.ProductsToAPI(),
 	}
 }
 
 // Для Node
 func (n *Node) ToAPI() gin.H {
 	return gin.H{
-		"id":       n.ID,
-		"name":     n.Name,
-		"type":     "node",
-		"systemId": n.SystemID,
+		"id":             n.ID,
+		"name":           n.Name,
+		"type":           "node",
+		"systemId":       n.SystemID,
+		"functionBlocks": n.FunctionBlocksToAPI(),
 	}
 }
 
@@ -548,6 +556,7 @@ func (s *System) ProductsToAPI() []gin.H {
 		products = append(products, gin.H{
 			"id":        p.ID,
 			"name":      p.Name,
+			"type":      "product",
 			"systemId":  p.SystemID,
 			"createdAt": p.CreatedAt,
 		})
@@ -555,16 +564,10 @@ func (s *System) ProductsToAPI() []gin.H {
 	return products
 }
 
-func (s *System) FunctionBlocksToAPI() []gin.H {
+func (n *Node) FunctionBlocksToAPI() []gin.H {
 	var fbs []gin.H
-	for _, fb := range s.FunctionBlocks {
-		fbs = append(fbs, gin.H{
-			"id":        fb.ID,
-			"tag":       fb.Tag,
-			"system":    fb.System,
-			"cdsType":   fb.CdsType,
-			"variables": fb.VariablesToAPI(),
-		})
+	for _, fb := range n.FunctionBlocks {
+		fbs = append(fbs, fb.ToAPI())
 	}
 	return fbs
 }
@@ -573,7 +576,9 @@ func (fb *FunctionBlock) VariablesToAPI() []gin.H {
 	var vars []gin.H
 	for _, v := range fb.Variables {
 		vars = append(vars, gin.H{
-			"id":        v.ID,
+			"id": v.ID,
+
+			"type":      "variable",
 			"direction": v.Direction,
 			"signalTag": v.SignalTag,
 			"funcAttr":  v.FuncAttr,

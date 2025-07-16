@@ -66,6 +66,11 @@ func (r *NodeRepository) GetWithDetails(id string, node *models.Node) error {
 		First(node, id).Error
 }
 
+// repository/node_repository.go
+func (r *NodeRepository) LinkFunctionBlock(node *models.Node, fb *models.FunctionBlock) error {
+	return r.db.Model(node).Association("FunctionBlocks").Append(fb)
+}
+
 // В node_repository.go
 func (r *NodeRepository) FindSimilarInSystem(name string, systemID uint) ([]models.Node, error) {
 	var nodes []models.Node
@@ -105,4 +110,35 @@ func (r *NodeRepository) FindByNameAndSystem(name string, systemID uint) (*model
 // Create создает новый узел
 func (r *NodeRepository) Create(node *models.Node) error {
 	return r.db.Create(node).Error
+}
+func (r *NodeRepository) SaveNodeWithSystems(node *models.Node) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Сохраняем узел
+		if err := tx.Save(node).Error; err != nil {
+			return err
+		}
+
+		// Обновляем связи с системами
+		if err := tx.Model(node).Association("Systems").Replace(node.Systems); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+func (r *NodeRepository) GetWithSystems(id string, node *models.Node) error {
+	return r.db.
+		Preload("Systems").
+		Where("id = ?", id).
+		First(node).
+		Error
+}
+
+func (r *NodeRepository) GetWithFBs(id string, node *models.Node) error {
+	return r.db.
+		Preload("FunctionBlocks", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("System") // Загружаем связанные системы
+		}).
+		Where("id = ?", id).
+		First(&node).Error
 }
