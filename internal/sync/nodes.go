@@ -87,7 +87,9 @@ func (s *SyncService) findBestNodeMatch(nodeName string, systemID uint) (*models
 	if node, err := s.nodeRepo.FindByName(nodeName); err == nil {
 		return node, nil
 	}
-
+	if nodeName == "" {
+		nodeName = "Общее"
+	}
 	nodes, err := s.nodeRepo.FindSimilarInSystem(nodeName)
 	if err != nil {
 		return nil, err

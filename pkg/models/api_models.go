@@ -29,8 +29,6 @@ func (s *System) ToDetailedAPI() gin.H {
 		"projectId": s.ProjectID,
 		"nodes":     s.NodesToDetailedAPI(),
 		"products":  s.ProductsToDetailedAPI(),
-		"createdAt": s.CreatedAt,
-		"updatedAt": s.UpdatedAt,
 	}
 }
 
@@ -55,22 +53,6 @@ func (s *System) ProductsToDetailedAPI() []gin.H {
 		})
 	}
 	return products
-}
-
-func (s *System) FunctionBlocksToDetailedAPI() []gin.H {
-	var fbs []gin.H
-	for _, fb := range s.FunctionBlocks {
-		fbs = append(fbs, gin.H{
-			"id":        fb.ID,
-			"tag":       fb.Tag,
-			"system":    fb.System,
-			"cdsType":   fb.CdsType,
-			"createdAt": fb.CreatedAt,
-			"updatedAt": fb.UpdatedAt,
-			"variables": fb.VariablesToDetailedAPI(),
-		})
-	}
-	return fbs
 }
 
 // Для Node
@@ -100,14 +82,13 @@ func (p *Product) ToDetailedAPI() gin.H {
 // Для FunctionBlock
 func (fb *FunctionBlock) ToDetailedAPI() gin.H {
 	return gin.H{
-		"id":  fb.ID,
-		"tag": fb.Tag,
-
+		"id":        fb.ID,
+		"tag":       fb.Tag,
+		"call":      fb.Call,
+		"omx":       fb.OMX,
+		"opc":       fb.OPC,
 		"type":      "functionblock",
-		"system":    fb.System,
 		"cdsType":   fb.CdsType,
-		"createdAt": fb.CreatedAt,
-		"updatedAt": fb.UpdatedAt,
 		"variables": fb.VariablesToDetailedAPI(),
 	}
 }
@@ -165,7 +146,7 @@ func (n *Node) ToAPI() gin.H {
 func (fb *FunctionBlock) ToAPI() gin.H {
 	return gin.H{
 		"id":        fb.ID,
-		"tag":       fb.Tag,
+		"name":      fb.Tag,
 		"type":      "functionblock",
 		"system":    fb.System,
 		"variables": fb.VariablesToAPI(),

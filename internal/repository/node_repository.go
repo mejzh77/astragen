@@ -141,3 +141,9 @@ func (r *NodeRepository) GetWithFBs(id string, node *models.Node) error {
 		Where("id = ?", id).
 		First(&node).Error
 }
+func (r *NodeRepository) GetByID(id uint, node *models.Node) error {
+	return r.db.
+		Preload("FunctionBlocks").
+		Where("id = ?", id).
+		First(&node).Error
+}

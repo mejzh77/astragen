@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             renderTree(data);
             setTimeout(initTreeBehavior, 0); 
+            initCodeHighlighting();
+            initSpoilers();
         });
 });
 
@@ -174,6 +176,8 @@ function loadDetails(type, id) {
         .then(data => {
             document.getElementById('details-content').innerHTML = 
                 renderDetailsTable(data, type);
+                //Prism.highlightAll();
+                //initSpoilers();
         })
         .catch(error => {
             console.error('Error:', error);
@@ -184,10 +188,20 @@ function loadDetails(type, id) {
         });
 }
 
+function initCodeHighlighting() {
+    // For static content
+    Prism.highlightAll();
+    
+    // For dynamic content (like your details view)
+    document.addEventListener('DOMContentLoaded', function() {
+        Prism.highlightAll();
+    });
+}
+
 function renderDetailsTable(data, type) {
     let html = `<h3>${data.name || data.tag || 'Элемент'}</h3>`;
     html += `<p><strong>Тип:</strong> ${type}</p>`;
-    
+    //console.log(data)
     // Таблица с основными свойствами
     html += `<table class="details-table">
         <thead>
@@ -200,7 +214,7 @@ function renderDetailsTable(data, type) {
     
     // Основные поля
     for (const [key, value] of Object.entries(data)) {
-        if (value && typeof value === 'object') continue;
+        if (value && typeof value === 'object' && key === 'call') continue;
         html += `<tr>
             <td><strong>${key}</strong></td>
             <td>${value}</td>
@@ -242,8 +256,64 @@ function renderDetailsTable(data, type) {
                 });
                 html += `</tbody></table>`;
             }
+            if (data.call) {
+                html += `
+                <div class="spoiler">
+                    <button class="spoiler-toggle">Показать ST код</button>
+                    <div class="spoiler-content" style="display:none;">
+                        <pre class="line-numbers"><code class="language-st">${escapeHtml(data.call)}</code></pre>
+                    </div>
+                </div>`;
+            }
+            if (data.omx) {
+                html += `
+                <div class="spoiler">
+                    <button class="spoiler-toggle">Показать сгенерированный XML</button>
+                    <div class="spoiler-content" style="display:none;">
+                        <pre class="line-numbers"><code class="language-xml">${escapeHtml(data.omx)}</code></pre>
+                    </div>
+                </div>`;
+            }
+            if (data.opc) {
+                html += `
+                <div class="spoiler">
+                    <button class="spoiler-toggle">Показать сгенерированный XML</button>
+                    <div class="spoiler-content" style="display:none;">
+                        <pre class="line-numbers"><code class="language-xml">${escapeHtml(data.opc)}</code></pre>
+                    </div>
+                </div>`;
+            }
             break;
     }
     
     return html;
+}
+// Добавляем обработчик для спойлеров после загрузки контента
+function initSpoilers() {
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('spoiler-toggle')) {
+            const spoiler = e.target.closest('.spoiler');
+            const content = spoiler.querySelector('.spoiler-content');
+            const isHidden = content.style.display === 'none';
+            
+            content.style.display = isHidden ? 'block' : 'none';
+            e.target.textContent = isHidden ? 'Скрыть' : 'Показать';
+            
+            // Переподсвечиваем код при открытии спойлера
+            if (isHidden) {
+                setTimeout(() => {
+                    Prism.highlightAllUnder(content);
+                }, 10);
+            }
+        }
+    });
+}
+// Helper function to escape HTML for code blocks
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

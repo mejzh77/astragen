@@ -1,0 +1,140 @@
+db:
+    host: 192.168.0.119
+    port: "5432"
+    user: user
+    password: advengauser
+    name: astragen
+    ssl_mode: disable
+spreadsheet_id: 1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ
+update: true
+sheets:
+    - sheet_name: DI
+      signal_type: DI
+    - sheet_name: AI
+      signal_type: AI
+    - sheet_name: DQ
+      signal_type: DO
+    - sheet_name: AQ
+      signal_type: AO
+function_blocks:
+    MTR:
+        st_template: |
+            {{.CdsType}}.{{.Tag}}(
+            {{- range $lhs, $rhs := .In }}
+                {{- if $rhs }}
+                  {{ $lhs }} := {{ $rhs }},
+                {{- end }}
+            {{- end }}
+            {{- range $lhs, $rhs := .Out }}
+                {{- if $rhs }}
+                  {{ $lhs }} => {{ $rhs }},
+                {{- end }}
+            {{- end }}
+            );
+        in:
+            pumpFault: FAULT
+            pumpOn: LSO
+        out:
+            start: ON_CTL
+        omx:
+            template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
+            attributes:
+                unit.System.Attributes.Description: .FB.Tag
+                unit.System.Attributes.TAGNAME: .FB.Equipment
+                unit.System.Attributes.Title: .FB.Tag
+        opc:
+            items:
+                - CONFIG.RUNTIME
+                - SET_MODE
+                - HMI_CMD
+                - DIAGN
+                - RQST_W
+                - CTL_W
+                - HMI_BLOCK
+                - BLOCK
+                - STATE
+                - PI.VALUE
+                - PI.QUALITY
+                - TIMEOUT
+                - EXC_ERRORS
+    PUMP:
+        st_template: |
+            {{.CdsType}}.{{.Tag}}(
+            {{- range $lhs, $rhs := .In }}
+                {{- if $rhs }}
+                  {{ $lhs }} := {{ $rhs }},
+                {{- end }}
+            {{- end }}
+            {{- range $lhs, $rhs := .Out }}
+                {{- if $rhs }}
+                  {{ $lhs }} => {{ $rhs }},
+                {{- end }}
+            {{- end }}
+            );
+        in:
+            pumpFault: FAULT
+            pumpOn: LSO
+        out:
+            start: ON_CTL
+        omx:
+            template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
+            attributes:
+                unit.System.Attributes.Description: .FB.Tag
+                unit.System.Attributes.TAGNAME: .FB.Equipment
+                unit.System.Attributes.Title: .FB.Tag
+        opc:
+            items: []
+    VALVE:
+        st_template: |
+            {{.CdsType}}.{{.Tag}}(
+            {{- range $lhs, $rhs := .In }}
+                {{- if $rhs }}
+                  {{ $lhs }} := {{ $rhs }},
+                {{- end }}
+            {{- end }}
+            {{- range $lhs, $rhs := .Out }}
+                {{- if $rhs }}
+                  {{ $lhs }} => {{ $rhs }},
+                {{- end }}
+            {{- end }}
+            );
+        in:
+            closed: LSC
+            opened: LSO
+        out:
+            close: CLS_CTL
+            open: OPN_CTL
+        omx:
+            template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
+            attributes:
+                unit.System.Attributes.Description: .FB.Tag
+                unit.System.Attributes.TAGNAME: .FB.Equipment
+                unit.System.Attributes.Title: .FB.Tag
+        opc:
+            items:
+                - CONFIG.RUNTIME
+                - SET_MODE
+                - HMI_CMD
+                - DIAGN
+                - RQST_W
+                - CTL_W
+                - HMI_BLOCK
+                - BLOCK
+                - STATE
+                - PI.VALUE
+                - PI.QUALITY
+                - TIMEOUT
+                - EXC_ERRORS
+systems:
+    - RSU_7
+    - PAZ_7
+    - RSU_12
+    - PAZ_12
+nodesheet: Узлы (копия)
+default_opc:
+    base_path: ""
+    node_prefix: ""
+    namespace: ""
+    nodeIdType: ""
+    binding: ""
+productsheet: Изделия

@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRA Config Editor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism.css" rel="stylesheet">
+    <style>
+        .editor-container {
+            position: relative;
+            height: 200px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        .map-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .fb-card {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .fb-card-header {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+        .fb-card-header h5 {
+            margin-bottom: 0;
+        }
+        .fb-card-body {
+            padding: 15px;
+        }
+        .collapsed .fb-card-body {
+            display: none;
+        }
+        .toggle-icon {
+            transition: transform 0.2s;
+        }
+        .collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        .add-fb-btn {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="mb-4">Configuration Editor</h1>
+        
+        <div class="mb-3">
+            <button id="saveBtn" class="btn btn-primary">Save Changes</button>
+            <button id="reloadBtn" class="btn btn-secondary">Reload</button>
+        </div>
+        
+        <!-- Основные настройки -->
+        <div class="section">
+            <h2>Database Settings</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Host</label>
+                    <input type="text" class="form-control" data-path="db.host">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Port</label>
+                    <input type="text" class="form-control" data-path="db.port">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">User</label>
+                    <input type="text" class="form-control" data-path="db.user">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" data-path="db.password">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Database Name</label>
+                    <input type="text" class="form-control" data-path="db.name">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">SSL Mode</label>
+                    <select class="form-select" data-path="db.ssl_mode">
+                        <option value="disable">disable</option>
+                        <option value="require">require</option>
+                        <option value="verify-ca">verify-ca</option>
+                        <option value="verify-full">verify-full</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spreadsheet Settings -->
+        <div class="section">
+            <h2>Spreadsheet Settings</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Spreadsheet ID</label>
+                    <input type="text" class="form-control" data-path="spreadsheet_id">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Node Sheet</label>
+                    <input type="text" class="form-control" data-path="nodesheet">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Product Sheet</label>
+                    <input type="text" class="form-control" data-path="productsheet">
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input" type="checkbox" data-path="update">
+                        <label class="form-check-label">Auto Update</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Systems List -->
+        <div class="section">
+            <h2>Systems</h2>
+            <div id="systemsList">
+                <!-- Systems will be added here -->
+            </div>
+            <button class="btn btn-sm btn-outline-primary mt-2" id="addSystem">Add System</button>
+        </div>
+
+        <!-- Function Blocks -->
+        <div class="section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Function Blocks</h2>
+            <div>
+                <button class="btn btn-outline-secondary me-2" id="collapseAllFb">Collapse All</button>
+                <button class="btn btn-outline-secondary me-2" id="expandAllFb">Expand All</button>
+                <button class="btn btn-success" id="addFbBtn">+ Add Block</button>
+            </div>
+        </div>
+        
+        <div id="functionBlocksContainer">
+            <!-- Function blocks will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Add Function Block Modal -->
+    <div class="modal fade" id="addFbModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Function Block</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Function Block Name</label>
+                        <input type="text" class="form-control" id="fbNameInput">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmAddFb">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Map Item Modal -->
+    <div class="modal fade" id="mapItemModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Map Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Key</label>
+                        <input type="text" class="form-control" id="mapItemKey">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Value</label>
+                        <input type="text" class="form-control" id="mapItemValue">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveMapItem">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-go.min.js"></script>
+    <script>
+        let configData = {};
+        let currentMapPath = '';
+        let currentMapItemIndex = -1;
+
+        // Load config data
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                configData = await response.json();
+                renderConfig();
+            } catch (error) {
+                console.error('Error loading config:', error);
+                alert('Failed to load config');
+            }
+        }
+
+        // Render the entire config
+        function renderConfig() {
+            // Database settings
+            setInputValue('db.host', configData.db?.host);
+            setInputValue('db.port', configData.db?.port);
+            setInputValue('db.user', configData.db?.user);
+            setInputValue('db.password', configData.db?.password);
+            setInputValue('db.name', configData.db?.name);
+            setInputValue('db.ssl_mode', configData.db?.ssl_mode);
+            
+            // Spreadsheet settings
+            setInputValue('spreadsheet_id', configData.spreadsheet_id);
+            setInputValue('nodesheet', configData.nodesheet);
+            setInputValue('productsheet', configData.productsheet);
+            setInputValue('update', configData.update);
+            
+            // Systems
+            renderSystems();
+            
+            // Function blocks
+            renderFunctionBlocks();
+        }
+
+        // Render systems list
+        function renderSystems() {
+            const container = document.getElementById('systemsList');
+            container.innerHTML = '';
+            
+            if (!configData.systems) {
+                configData.systems = [];
+            }
+            
+            configData.systems.forEach((system, index) => {
+                const div = document.createElement('div');
+                div.className = 'input-group mb-2';
+                div.innerHTML = `
+                    <input type="text" class="form-control" value="${system}" data-index="${index}">
+                    <button class="btn btn-outline-danger remove-system" type="button" data-index="${index}">
+                        &times;
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('#systemsList input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    configData.systems[index] = e.target.value;
+                });
+            });
+            
+            document.querySelectorAll('.remove-system').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    configData.systems.splice(index, 1);
+                    renderSystems();
+                });
+            });
+        }
+
+        // Render function blocks
+        function renderFunctionBlocks() {
+            const container = document.getElementById('functionBlocksContainer');
+            container.innerHTML = '';
+            
+            if (!configData.function_blocks) {
+                configData.function_blocks = {};
+            }
+            
+            Object.keys(configData.function_blocks).forEach((fbName, index) => {
+                const fb = configData.function_blocks[fbName];
+                const card = document.createElement('div');
+                card.className = 'fb-card';
+                card.innerHTML = `
+                   <div class="fb-card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <span class="toggle-icon me-2">▼</span>
+                            <h5 class="mb-0">${fbName}</h5>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger remove-fb" data-fb="${fbName}">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="fb-card-body">
+                        <div class="mb-3">
+                            <label class="form-label">ST Template</label>
+                            <textarea class="form-control st-template" data-fb="${fbName}" 
+                                style="height: 150px; font-family: monospace;">${fb.st_template || ''}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Inputs</h6>
+                            <div class="map-items-container" id="inputs-${fbName}">
+                                ${renderMapItems(fb.in || {}, `function_blocks.${fbName}.in`)}
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary add-map-item" 
+                                data-path="function_blocks.${fbName}.in">Add Input</button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Outputs</h6>
+                            <div class="map-items-container" id="outputs-${fbName}">
+                                ${renderMapItems(fb.out || {}, `function_blocks.${fbName}.out`)}
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary add-map-item" 
+                                data-path="function_blocks.${fbName}.out">Add Output</button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>OPC Items</h6>
+                            <div class="list-items-container" id="opc-items-${fbName}">
+                                ${renderListItems(fb.opc?.items || [], `function_blocks.${fbName}.opc.items`)}
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary add-list-item" 
+                                data-path="function_blocks.${fbName}.opc.items">Add OPC Item</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+                const header = card.querySelector('.fb-card-header');
+                header.addEventListener('click', (e) => {
+                    // Don't toggle if clicked on remove button
+                    if (!e.target.classList.contains('remove-fb')) {
+                        card.classList.toggle('collapsed');
+                    }
+                });
+                // Добавляем обработчик изменения текста шаблона
+                const textarea = card.querySelector('.st-template');
+                textarea.addEventListener('change', (e) => {
+                    configData.function_blocks[fbName].st_template = e.target.value;
+                 });
+            });
+            document.querySelectorAll('.st-template').forEach(textarea => {
+                textarea.addEventListener('change', (e) => {
+                    const fbName = e.target.dataset.fb;
+                    configData.function_blocks[fbName].st_template = e.target.value;
+                });
+            });
+            
+            // Add event listeners for list items
+            document.querySelectorAll('.add-list-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const path = e.target.dataset.path;
+                    const parts = path.split('.');
+                    let current = configData;
+                    
+                    for (let i = 0; i < parts.length - 1; i++) {
+                        current = current[parts[i]];
+                    }
+                    
+                    if (!current[parts[parts.length - 1]]) {
+                        current[parts[parts.length - 1]] = [];
+                    }
+                    
+                    current[parts[parts.length - 1]].push('');
+                    renderFunctionBlocks();
+                });
+            });
+        }
+        // Collapse/Expand all functionality
+        document.getElementById('collapseAllFb').addEventListener('click', () => {
+            document.querySelectorAll('.fb-card').forEach(card => {
+                card.classList.add('collapsed');
+            });
+        });
+
+        document.getElementById('expandAllFb').addEventListener('click', () => {
+            document.querySelectorAll('.fb-card').forEach(card => {
+                card.classList.remove('collapsed');
+            });
+        });
+
+        // Initialize with all blocks collapsed
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig().then(() => {
+                renderFunctionBlocks();
+                // Collapse all by default
+                document.getElementById('collapseAllFb').click();
+            });
+        });
+        document.getElementById('addFbBtn').addEventListener('click', () => {
+            const modal = new bootstrap.Modal(document.getElementById('addFbModal'));
+            modal.show();
+        });
+
+        document.getElementById('confirmAddFb').addEventListener('click', () => {
+            const fbName = document.getElementById('fbNameInput').value.trim();
+            if (!fbName) {
+                alert('Function Block name is required');
+                return;
+            }
+            
+            if (configData.function_blocks[fbName]) {
+                alert('Function Block with this name already exists');
+                return;
+            }
+            
+            // Initialize new function block with default structure
+            configData.function_blocks[fbName] = {
+                st_template: '',
+                in: {},
+                out: {},
+                omx: {
+                    template: '',
+                    attributes: {}
+                },
+                opc: {
+                    items: []
+                }
+            };
+            
+            // Close modal and refresh view
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addFbModal'));
+            modal.hide();
+            document.getElementById('fbNameInput').value = '';
+            renderFunctionBlocks();
+        });
+
+        // Remove function block
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-fb')) {
+                if (confirm('Are you sure you want to delete this Function Block?')) {
+                    const fbName = e.target.dataset.fb;
+                    delete configData.function_blocks[fbName];
+                    renderFunctionBlocks();
+                }
+            }
+        });
+        // Render map items (for in/out)
+        function renderMapItems(map, path) {
+            if (!map) return '';
+            
+            return Object.keys(map).map((key, index) => `
+                <div class="map-item">
+                    <div class="d-flex justify-content-between">
+                        <span><strong>${key}</strong> = ${map[key]}</span>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary edit-map-item" 
+                                data-path="${path}" data-key="${key}" data-value="${map[key]}" data-index="${index}">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger remove-map-item" 
+                                data-path="${path}" data-key="${key}">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render list items (for OPC items)
+        function renderListItems(list, path) {
+            if (!list) return '';
+            
+            return list.map((item, index) => `
+                <div class="map-item">
+                    <div class="d-flex justify-content-between">
+                        <span>${item}</span>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary edit-list-item" 
+                                data-path="${path}" data-index="${index}">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger remove-list-item" 
+                                data-path="${path}" data-index="${index}">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Set input value by data-path
+        function setInputValue(path, value) {
+            const element = document.querySelector(`[data-path="${path}"]`);
+            if (!element) return;
+            
+            if (element.type === 'checkbox') {
+                element.checked = value;
+            } else {
+                element.value = value || '';
+            }
+        }
+
+        // Save config
+        async function saveConfig() {
+            try {
+                // Collect all changes from inputs
+                document.querySelectorAll('[data-path]').forEach(element => {
+                    const path = element.dataset.path;
+                    const value = element.type === 'checkbox' ? element.checked : element.value;
+                    setConfigValue(path, value);
+                });
+                
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(configData),
+                });
+                
+                if (response.ok) {
+                    alert('Config saved successfully');
+                } else {
+                    throw new Error('Failed to save config');
+                }
+            } catch (error) {
+                console.error('Error saving config:', error);
+                alert('Failed to save config');
+            }
+        }
+
+        // Set nested config value by path
+        function setConfigValue(path, value) {
+            const parts = path.split('.');
+            let current = configData;
+            
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!current[parts[i]]) {
+                    current[parts[i]] = {};
+                }
+                current = current[parts[i]];
+            }
+            
+            current[parts[parts.length - 1]] = value;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            
+            // Save button
+            document.getElementById('saveBtn').addEventListener('click', saveConfig);
+            
+            // Reload button
+            document.getElementById('reloadBtn').addEventListener('click', loadConfig);
+            
+            // Add system button
+            document.getElementById('addSystem').addEventListener('click', () => {
+                if (!configData.systems) {
+                    configData.systems = [];
+                }
+                configData.systems.push('');
+                renderSystems();
+            });
+            
+            // Save map item
+            document.getElementById('saveMapItem').addEventListener('click', () => {
+                const key = document.getElementById('mapItemKey').value;
+                const value = document.getElementById('mapItemValue').value;
+                
+                if (!key) {
+                    alert('Key is required');
+                    return;
+                }
+                
+                const parts = currentMapPath.split('.');
+                let current = configData;
+                
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!current[parts[i]]) {
+                        current[parts[i]] = {};
+                    }
+                    current = current[parts[i]];
+                }
+                
+                if (!current[parts[parts.length - 1]]) {
+                    current[parts[parts.length - 1]] = {};
+                }
+                
+                current[parts[parts.length - 1]][key] = value;
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('mapItemModal'));
+                modal.hide();
+                
+                renderFunctionBlocks();
+            });
+            
+            // Edit map item (delegated event)
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-map-item')) {
+                    currentMapPath = e.target.dataset.path;
+                    currentMapItemIndex = e.target.dataset.index;
+                    
+                    document.getElementById('mapItemKey').value = e.target.dataset.key;
+                    document.getElementById('mapItemValue').value = e.target.dataset.value;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('mapItemModal'));
+                    modal.show();
+                }
+                
+                if (e.target.classList.contains('remove-map-item')) {
+                    const path = e.target.dataset.path;
+                    const key = e.target.dataset.key;
+                    
+                    const parts = path.split('.');
+                    let current = configData;
+                    
+                    for (let i = 0; i < parts.length - 1; i++) {
+                        current = current[parts[i]];
+                    }
+                    
+                    delete current[parts[parts.length - 1]][key];
+                    renderFunctionBlocks();
+                }
+                
+                if (e.target.classList.contains('edit-list-item')) {
+                    const path = e.target.dataset.path;
+                    const index = parseInt(e.target.dataset.index);
+                    
+                    const parts = path.split('.');
+                    let current = configData;
+                    
+                    for (let i = 0; i < parts.length - 1; i++) {
+                        current = current[parts[i]];
+                    }
+                    
+                    const newValue = prompt('Enter new value:', current[parts[parts.length - 1]][index]);
+                    if (newValue !== null) {
+                        current[parts[parts.length - 1]][index] = newValue;
+                        renderFunctionBlocks();
+                    }
+                }
+                
+                if (e.target.classList.contains('remove-list-item')) {
+                    const path = e.target.dataset.path;
+                    const index = parseInt(e.target.dataset.index);
+                    
+                    const parts = path.split('.');
+                    let current = configData;
+                    
+                    for (let i = 0; i < parts.length - 1; i++) {
+                        current = current[parts[i]];
+                    }
+                    
+                    current[parts[parts.length - 1]].splice(index, 1);
+                    renderFunctionBlocks();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

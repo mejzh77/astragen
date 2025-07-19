@@ -23,6 +23,9 @@ func (s *WebService) RegisterRoutes(r *gin.Engine) {
 	r.POST("/api/sync", s.SyncData)
 	r.GET("/api/tree-data", s.GetTreeData)
 	r.GET("/api/details", s.getItemDetails)
+	r.GET("/api/config", s.GetConfig)
+	r.POST("/api/config", s.UpdateConfig)
+	r.GET("/config", s.ConfigPage)
 }
 
 func (s *WebService) IndexPage(c *gin.Context) {
@@ -30,7 +33,48 @@ func (s *WebService) IndexPage(c *gin.Context) {
 		"title": "ASTRA Dashboard",
 	})
 }
+func (s *WebService) ConfigPage(c *gin.Context) {
+	c.HTML(http.StatusOK, "config.html", gin.H{
+		"title": "Редактор конфигурации",
+	})
+}
 
+// Добавить в service.go
+func (s *WebService) GetConfig(c *gin.Context) {
+	config, err := s.syncService.GetConfig()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to get config",
+			"details": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, config)
+}
+
+func (s *WebService) UpdateConfig(c *gin.Context) {
+	var updates map[string]interface{}
+	if err := c.BindJSON(&updates); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	if err := s.syncService.UpdateConfig(updates); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to update config",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Config updated",
+	})
+}
 func (s *WebService) TreePage(c *gin.Context) {
 	treeData, err := s.syncService.GetTreeData()
 	if err != nil {

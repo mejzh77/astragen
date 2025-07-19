@@ -88,26 +88,33 @@ func (r *FunctionBlockRepository) DebugCheckFunctionBlocks() {
 	r.db.Limit(5).Find(&fbs)
 	log.Printf("Sample FBs: %+v", fbs)
 }
+
 func (r *FunctionBlockRepository) SyncFBFromSignals(signals []models.Signal) error {
-	// Собираем информацию о направлениях переменных из конфига
-	varDirections := make(map[string]string) // signalTag -> direction
-	for _, fbConfig := range config.Cfg.FunctionBlocks {
-		for _, inVar := range fbConfig.In {
-			varDirections[inVar] = "input"
-		}
-		for _, outVar := range fbConfig.Out {
-			varDirections[outVar] = "output"
-		}
-	}
+	fbConfigs := config.Cfg.FunctionBlocks
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Первый проход: создаем/обновляем FB и переменные
 		fbCache := make(map[string]*models.FunctionBlock)
+		var fbTags []string
 
 		for _, signal := range signals {
-			_, funcAttr, _ := models.ParseFBInfo(signal.Tag)
-			direction, exists := varDirections[funcAttr]
+			_, funcAttr, ok := models.ParseFBInfo(signal.Tag)
+			if !ok || signal.FB == "" {
+				continue
+			}
+
+			fbConfig, exists := fbConfigs[signal.FB]
 			if !exists {
-				continue // Пропускаем сигналы не из конфига
+				continue
+			}
+
+			var direction string
+			if _, isInput := fbConfig.In[funcAttr]; isInput {
+				direction = "input"
+			} else if _, isOutput := fbConfig.Out[funcAttr]; isOutput {
+				direction = "output"
+			} else {
+				continue
 			}
 
 			fb, variable := models.ParseFBFromSignal(signal, direction)
@@ -115,29 +122,88 @@ func (r *FunctionBlockRepository) SyncFBFromSignals(signals []models.Signal) err
 				continue
 			}
 
-			// Используем кэш FB, чтобы не дублировать
+			fb.CdsType = signal.FB
+
 			if cachedFB, ok := fbCache[fb.Tag]; ok {
 				fb = cachedFB
 			} else {
-				// Создаем/обновляем FB
 				if err := tx.Clauses(clause.OnConflict{
 					Columns:   []clause.Column{{Name: "tag"}},
-					DoUpdates: clause.AssignmentColumns([]string{"system", "cds_type", "updated_at"}),
+					DoUpdates: clause.AssignmentColumns([]string{"cds_type", "system_id", "node_id", "updated_at"}),
 				}).Create(fb).Error; err != nil {
 					return fmt.Errorf("failed to upsert FB %s: %w", fb.Tag, err)
 				}
 				fbCache[fb.Tag] = fb
+				fbTags = append(fbTags, fb.Tag)
 			}
 
-			// Добавляем переменную
 			variable.FBID = fb.ID
-			if err := tx.Create(variable).Error; err != nil {
-				return fmt.Errorf("failed to create variable for FB %s: %w", fb.Tag, err)
+			result := tx.Where(models.FBVariable{
+				SignalTag: variable.SignalTag,
+				FBID:      variable.FBID,
+			}).FirstOrCreate(variable)
+
+			if result.Error != nil {
+				return fmt.Errorf("failed to upsert variable for FB %s: %w", fb.Tag, result.Error)
 			}
 		}
+
+		// Второй проход: генерация ST-кода для всех FB с переменными
+		for _, fbTag := range fbTags {
+			fb := fbCache[fbTag]
+			fbConfig := fbConfigs[fb.CdsType]
+
+			// Загружаем все переменные для этого FB
+			var variables []models.FBVariable
+			if err := tx.Where("fb_id = ?", fb.ID).Find(&variables).Error; err != nil {
+				return fmt.Errorf("failed to load variables for FB %s: %w", fb.Tag, err)
+			}
+
+			// Обновляем FB переменными
+			fb.Variables = variables
+
+			// Генерируем ST-код
+			stCode, err := fb.GenerateSTCode(
+				fbConfig.Template,
+				fbConfig.In,
+				fbConfig.Out,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to generate ST code for FB %s: %w", fb.Tag, err)
+			}
+			// Обновляем поле Call
+			if err := tx.Model(fb).Update("call", stCode).Error; err != nil {
+				return fmt.Errorf("failed to update FB call %s: %w", fb.Tag, err)
+			}
+			omxCode, err := fb.GenerateOMX(fbConfig.OMX.Template, fbConfig.OMX.Attributes)
+			if err != nil {
+				return fmt.Errorf("failed to generate OMX for FB %s: %w", fb.Tag, err)
+			}
+			// Обновляем поле Call
+			if err := tx.Model(fb).Update("omx", omxCode).Error; err != nil {
+				return fmt.Errorf("failed to update FB call %s: %w", fb.Tag, err)
+			}
+			opcData := models.OPCTemplate{
+				Binding:    config.Cfg.DefaultOPCItem.Binding,
+				Namespace:  config.Cfg.DefaultOPCItem.Namespace,
+				BasePath:   config.Cfg.DefaultOPCItem.BasePath,
+				NodePrefix: config.Cfg.DefaultOPCItem.NodePrefix,
+				PathSuffix: fbConfig.OPC.Items,
+			}
+			opcCode, err := fb.GenerateOPC(opcData)
+			if err != nil {
+				return fmt.Errorf("failed to generate OMX for FB %s: %w", fb.Tag, err)
+			}
+			// Обновляем поле Call
+			if err := tx.Model(fb).Update("opc", opcCode).Error; err != nil {
+				return fmt.Errorf("failed to update FB call %s: %w", fb.Tag, err)
+			}
+		}
+
 		return nil
 	})
 }
+
 func (r *FunctionBlockRepository) GetWithDetails(id string, fb *models.FunctionBlock) error {
 	return r.db.
 		Preload("Variables").

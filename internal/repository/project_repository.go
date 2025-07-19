@@ -84,9 +84,16 @@ func (r *ProjectRepository) GetWithDetails(id string, project *models.Project) e
 }
 func (r *ProjectRepository) GetAllWithHierarchy(projects *[]models.Project) error {
 	return r.db.
-		Preload("Systems.Nodes").
-		Preload("Systems.Products").
-		Preload("Systems.FunctionBlocks").
+		Preload("Systems", func(db *gorm.DB) *gorm.DB {
+			return db.
+				Preload("Nodes.FunctionBlocks.Variables.Signal").
+				Preload("Products.Signals").
+				Preload("FunctionBlocks", func(db *gorm.DB) *gorm.DB {
+					return db.
+						Preload("Variables.Signal").
+						Preload("Node")
+				})
+		}).
 		Find(projects).Error
 }
 func (r *ProjectRepository) LinkNodeToSystem(nodeName string, systemName string) (*models.Node, error) {

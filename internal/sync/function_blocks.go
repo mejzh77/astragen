@@ -21,27 +21,19 @@ func (s *SyncService) LinkFunctionBlocksToNodes() error {
 	if err := s.fbRepo.GetAllWithNodes(&fbs); err != nil {
 		return fmt.Errorf("failed to get function blocks: %w", err)
 	}
-
 	for _, fb := range fbs {
-		if fb.NodeRef == "" {
+
+		var node models.Node
+		if fb.NodeID == nil {
 			continue
 		}
-
-		var systemID uint
-		if fb.SystemID != nil {
-			systemID = *fb.SystemID
-		} else {
-			log.Printf("FB %s has no system assigned", fb.Tag)
-			continue
-		}
-
-		node, err := s.findBestNodeMatch(fb.NodeRef, systemID)
+		err := s.nodeRepo.GetByID(*fb.NodeID, &node)
 		if err != nil {
 			log.Printf("Warning: failed to find node for FB %s: %v", fb.Tag, err)
 			continue
 		}
 
-		if err := s.nodeRepo.LinkFunctionBlock(node, &fb); err != nil {
+		if err := s.nodeRepo.LinkFunctionBlock(&node, &fb); err != nil {
 			log.Printf("Warning: failed to link FB %s to node %s: %v", fb.Tag, node.Name, err)
 			continue
 		}

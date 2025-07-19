@@ -8,28 +8,104 @@ db:
 nodesheet: Узлы (копия)
 productsheet: Изделия
 spreadsheet_id: "1GAUwJRTtrBT4gr1y3ETsCSlHojrc7VCD2GlGDUM53kQ"
-update: true
+update: true 
 systems:
   - RSU_7
   - PAZ_7
   - RSU_12
   - PAZ_12
+
+default_st: &defaultST
+  st_template: |
+      {{.CdsType}}.{{.Tag}}(
+      {{- range $lhs, $rhs := .In }}
+          {{- if $rhs }}
+            {{ $lhs }} := {{ $rhs }},
+          {{- end }}
+      {{- end }}
+      {{- range $lhs, $rhs := .Out }}
+          {{- if $rhs }}
+            {{ $lhs }} => {{ $rhs }},
+          {{- end }}
+      {{- end }}
+      );
+default_omx: &defaultOMX
+  template: |
+        <object name="{{.FB.Tag}}" 
+                base-type="unit.Types.{{.FB.CdsType}}.PLC_View" 
+                access-scope="global" 
+                aspect="unit.PsBase.Aspects.PLC_Aspect" 
+                access-level="public" 
+                uuid="{{.UUID}}">
+        </object>
+  attributes:
+        "unit.System.Attributes.Description": ".FB.Tag"
+        "unit.System.Attributes.Title": ".FB.Tag"
+        "unit.System.Attributes.TAGNAME": ".FB.Equipment"
+default_opc:
+  default_opc_item: &default_opc_item
+    namespace: "urn:ProsoftSystems:regul_ua_server:iec_data"
+    nodeIdType: "string"
+    binding: "Introduced"
+    base_path: "{{.FB.CdsType}}.{{.FB.Tag}}"
+    node_prefix: "Application.{{.FB.CdsType}}.{{.FB.Tag}}"
+      
 function_blocks:
   MTR:
+    <<: *defaultST
     in:
-      SWON: "pumpOn"
-      FAULT: "pumpFault"
+      pumpOn: LSO
+      pumpFault: FAULT
     out:
-      ON_CTL: "start"
-  MTR_ChRP:
-    in:
-      MTRSWON: "motorOn"
-    out:
-      ON_CTL_MOTOR: "motorStart"
+      start: ON_CTL
+    omx:
+      <<: *defaultOMX
+    opc:
+      items:
+      - "CONFIG.RUNTIME"
+      - "SET_MODE"
+      - "HMI_CMD"
+      - "DIAGN"
+      - "RQST_W"
+      - "CTL_W"
+      - "HMI_BLOCK"
+      - "BLOCK"
+      - "STATE"
+      - "PI.VALUE"
+      - "PI.QUALITY"
+      - "TIMEOUT"
+      - "EXC_ERRORS"
   VALVE:
+    <<: *defaultST
     in:
-      LSO: "opened"
-      LSC: "closed"
+      opened: LSO
+      closed: LSC
     out:
-      OPN_CTL: "open"
-      CLS_CTL: "close"
+      open: OPN_CTL
+      close: CLS_CTL
+    omx:
+      <<: *defaultOMX
+    opc:
+      items:
+      - "CONFIG.RUNTIME"
+      - "SET_MODE"
+      - "HMI_CMD"
+      - "DIAGN"
+      - "RQST_W"
+      - "CTL_W"
+      - "HMI_BLOCK"
+      - "BLOCK"
+      - "STATE"
+      - "PI.VALUE"
+      - "PI.QUALITY"
+      - "TIMEOUT"
+      - "EXC_ERRORS"
+  PUMP:
+    <<: *defaultST
+    in:
+      pumpOn: LSO
+      pumpFault: FAULT
+    out:
+      start: ON_CTL
+    omx:
+      <<: *defaultOMX
