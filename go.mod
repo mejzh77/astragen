@@ -9,7 +9,7 @@ require (
 
 require (
 	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000
-	github.com/mejzh77/astragen/internal/api v0.0.0-00010101000000-000000000000
+	github.com/mejzh77/astragen/internal/api v0.0.0-20250719064055-afac95d025d7
 	github.com/mejzh77/astragen/internal/database v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/sync v0.0.0-00010101000000-000000000000
@@ -36,6 +36,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.7.5 // indirect

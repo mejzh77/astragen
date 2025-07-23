@@ -69,7 +69,10 @@ func (s *SyncService) loadSignalsFromSheets(ctx context.Context) ([]models.Signa
 			if err := s.processSignalSystems(&signal); err != nil {
 				return nil, fmt.Errorf("failed to link system %s: %w", signal.Tag, err)
 			}
-			allSignals = append(allSignals, signal)
+			if signal.SystemID != nil && signal.ProductID != nil {
+				allSignals = append(allSignals, signal)
+			}
+
 		}
 	}
 
@@ -86,9 +89,15 @@ func (s *SyncService) processSignalSystems(signal *models.Signal) error {
 		//fmt.Printf("failed to get system %s: %w", signal.SystemRef, err)
 		return nil
 	}
-
 	signal.SystemID = &system.ID
 	signal.System = system
+	product, err := s.productRepo.GetByName(signal.ProductRef)
+	if err != nil {
+		//fmt.Printf("failed to get system %s: %w", signal.SystemRef, err)
+		return nil
+	}
+	signal.ProductID = &product.ID
+	signal.Product = product
 	return nil
 }
 

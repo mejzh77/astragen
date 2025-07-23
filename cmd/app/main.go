@@ -20,7 +20,7 @@ import (
 func main() {
 	// 1. Загрузка конфигурации
 	log.Println("Loading configuration...")
-	config.Cfg = config.LoadConfig("configs/config.yml")
+	config.Cfg = config.LoadConfig("config.yml")
 
 	// 2. Инициализация БД
 	log.Println("Initializing database connection...")

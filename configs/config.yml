@@ -43,12 +43,11 @@ default_omx: &defaultOMX
         "unit.System.Attributes.Title": ".FB.Tag"
         "unit.System.Attributes.TAGNAME": ".FB.Equipment"
 default_opc:
-  default_opc_item: &default_opc_item
-    namespace: "urn:ProsoftSystems:regul_ua_server:iec_data"
-    nodeIdType: "string"
-    binding: "Introduced"
-    base_path: "{{.FB.CdsType}}.{{.FB.Tag}}"
-    node_prefix: "Application.{{.FB.CdsType}}.{{.FB.Tag}}"
+  namespace: "urn:ProsoftSystems:regul_ua_server:iec_data"
+  nodeIdType: "string"
+  binding: "Introduced"
+  base_path: "{{.FB.CdsType}}.{{.FB.Tag}}"
+  node_prefix: "Application.{{.FB.CdsType}}.{{.FB.Tag}}"
       
 function_blocks:
   MTR:

@@ -37,16 +37,27 @@ func (s *SyncService) LinkFunctionBlocksToNodes() error {
 			log.Printf("Warning: failed to link FB %s to node %s: %v", fb.Tag, node.Name, err)
 			continue
 		}
-
-		log.Printf("Linked FB %s to node %s", fb.Tag, node.Name)
 	}
 
 	return nil
 }
 
 func (s *SyncService) SyncFunctionBlocks(signals []models.Signal) error {
+	if err := s.fbRepo.SyncInputsFromSignals(signals); err != nil {
+		return fmt.Errorf("failed to sync function blocks: %w", err)
+	}
 	if err := s.fbRepo.SyncFBFromSignals(signals); err != nil {
 		return fmt.Errorf("failed to sync function blocks: %w", err)
 	}
 	return nil
+}
+func (s *SyncService) GetFilteredFunctionBlocks(system, cdsType, node string) ([]*models.FunctionBlock, error) {
+	return s.fbRepo.GetFiltered(system, cdsType, node)
+}
+
+func (s *SyncService) GetAllCDSTypes() ([]string, error) {
+	return s.fbRepo.GetAllCDSTypes()
+}
+func (s *SyncService) RegenerateAllImportFiles() (map[string]map[string]string, error) {
+	return s.fbRepo.RegenerateAllImportFiles()
 }

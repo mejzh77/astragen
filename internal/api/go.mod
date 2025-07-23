@@ -16,6 +16,8 @@ replace github.com/mejzh77/astragen/internal/sync => ../sync
 
 require (
 	github.com/gin-gonic/gin v1.10.1
+	github.com/gorilla/websocket v1.5.3
+	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000
 	github.com/mejzh77/astragen/internal/sync v0.0.0-00010101000000-000000000000
 )
 
@@ -46,7 +48,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000 // indirect
 	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000 // indirect
 	github.com/mejzh77/astragen/internal/repository v0.0.0-00010101000000-000000000000 // indirect
 	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000 // indirect

@@ -31,7 +31,6 @@ func (r *SignalRepository) SaveSignals(signals []models.Signal, debug bool) erro
 			if len(signal.NodeRef) > 255 {
 				signal.NodeRef = truncateUTF8(signal.NodeRef, 255)
 			}
-
 			if debug {
 				tx = tx.Debug()
 			}
@@ -207,7 +206,7 @@ func (r *SignalRepository) UpdateSignalNodes(signals []models.Signal) error {
 		return nil // Нет чего обновлять
 	}
 
-	return r.db.Debug().Transaction(func(tx *gorm.DB) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
 		// Проверяем существование всех узлов
 		var nodeIDs []uint
 		for _, nodeID := range updates {

@@ -31,7 +31,14 @@ func (r *SystemRepository) LinkSystemToProject(systemName string, projectID uint
 
 	return system, nil
 }
-
+func (r *SystemRepository) GetAllSystemNames() ([]string, error) {
+	var names []string
+	result := r.db.Model(&models.System{}).Pluck("name", &names)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return names, nil
+}
 func (r *SystemRepository) GetSystemByName(name string) (*models.System, error) {
 	var system models.System
 	if err := r.db.Where("name = ?", name).First(&system).Error; err != nil {

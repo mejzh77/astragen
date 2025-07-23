@@ -66,5 +66,6 @@ type SheetProduct struct {
 	Name     string `gsheets:"Проектная позиция"`
 	System   string `gsheets:"Система"`
 	Location string `gsheets:"Название размещения"`
+	Tag      string `gsheets:"tag"`
 	// Другие поля по необходимости
 }

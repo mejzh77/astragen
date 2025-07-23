@@ -3,6 +3,8 @@ package models
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -13,23 +15,27 @@ import (
 // FunctionBlock представляет функциональный блок
 type FunctionBlock struct {
 	gorm.Model
-	Tag       string       `gorm:"size:255;not null;uniqueIndex"`
-	System    *System      `gorm:"foreignKey:SystemID"`
-	Call      string       `gorm:"type:TEXT"`
-	OMX       string       `gorm:"type:TEXT"`
-	OPC       string       `gorm:"type:TEXT"`
-	CdsType   string       `gorm:"size:50"`
-	Equipment string       `gorm:"size:50"`
-	NodeID    *uint        `gorm:"index"`
-	NodeRef   string       `gorm:"size:255"`
-	SystemID  *uint        `gorm:"index"`
-	Node      *Node        `gorm:"foreignKey:NodeID"`
-	Variables []FBVariable `gorm:"foreignKey:FBID"`
+	Tag         string       `gorm:"size:255;not null;uniqueIndex"`
+	System      *System      `gorm:"foreignKey:SystemID"`
+	Declaration string       `gorm:"type:TEXT"`
+	Call        string       `gorm:"type:TEXT"`
+	OMX         string       `gorm:"type:TEXT"`
+	OPC         string       `gorm:"type:TEXT"`
+	CdsType     string       `gorm:"size:50"`
+	Primary     bool         `gorm:"not null;default:false"`
+	Equipment   string       `gorm:"size:50"`
+	NodeID      *uint        `gorm:"index"`
+	NodeRef     string       `gorm:"size:255"`
+	SystemID    *uint        `gorm:"index"`
+	Address     string       `gorm:"size:50"`
+	Node        *Node        `gorm:"foreignKey:NodeID"`
+	Variables   []FBVariable `gorm:"foreignKey:FBID"`
 }
 
 type FBCallParams struct {
 	Tag     string
 	CdsType string
+	Address string
 	In      IOPair
 	Out     IOPair
 }
@@ -70,11 +76,14 @@ func (fb *FunctionBlock) GenerateSTCode(fbTemplate string, defaultInputs, defaul
 			outputs[defaultOutputs[v.FuncAttr]] = v.SignalTag
 		}
 	}
-
+	if v, ok := defaultInputs["address"]; ok {
+		inputs["address"] = v
+	}
 	// Подготавливаем данные для шаблона
 	data := FBCallParams{
 		Tag:     fb.Tag,
 		CdsType: fb.CdsType,
+		Address: fb.Address,
 		In:      inputs,
 		Out:     outputs,
 	}
@@ -92,7 +101,48 @@ func (fb *FunctionBlock) GenerateSTCode(fbTemplate string, defaultInputs, defaul
 
 	return buf.String(), nil
 }
+func (fb *FBVariable) GenerateSTCode(fbTemplate string, inputs map[string]string) (string, error) {
+	// Подготавливаем данные для шаблона
+	data := FBCallParams{
+		Tag:     fb.SignalTag,
+		CdsType: fb.CdsType,
+		In:      inputs,
+	}
 
+	// Создаем и выполняем шаблон
+	tmpl, err := template.New("fbCall").Parse(fbTemplate)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+func FormatVarDeclaration(tag, varType string, indentSize, totalWidth int) string {
+	// Создаем отступ
+	indent := strings.Repeat(" ", indentSize)
+
+	// Формируем строку с выравниванием
+	// Используем fmt.Sprintf с минимальной шириной для первой части
+	formatted := fmt.Sprintf("%s%-*s %s;",
+		indent,
+		totalWidth-indentSize-len(" ")-len(";"),
+		tag+":",
+		varType)
+
+	return formatted
+}
+func (fb *FunctionBlock) GenerateSTDecl() (string, error) {
+	return FormatVarDeclaration(fb.Tag, "FB_"+fb.CdsType, 4, 40), nil
+}
+func (fb *FBVariable) GenerateSTDecl() (string, error) {
+	return FormatVarDeclaration(fb.SignalTag, "FB_"+fb.CdsType, 4, 40), nil
+}
 func (fb *FunctionBlock) GenerateOMX(tmplBase string, attributes map[string]string) (string, error) {
 	// Шаг 2: Генерируем блок атрибутов
 	tmplWithAttrs := strings.Replace(tmplBase, `</object>`, "", 1)
@@ -166,8 +216,12 @@ func (fb *FunctionBlock) GenerateOPC(mapping OPCTemplate) (string, error) {
 	buf.WriteString(`</opc-import>`)
 	return buf.String(), nil
 }
-func executeTemplate(tmplStr string, data interface{}) (string, error) {
-	tmpl, err := template.New("").Parse(tmplStr)
+func executeTemplate(tmplStr string, data interface{}, funcs ...template.FuncMap) (string, error) {
+	tmpl := template.New("")
+	if len(funcs) > 0 {
+		tmpl = tmpl.Funcs(funcs[0])
+	}
+	tmpl, err := tmpl.Parse(tmplStr)
 	if err != nil {
 		return "", err
 	}
@@ -176,7 +230,6 @@ func executeTemplate(tmplStr string, data interface{}) (string, error) {
 	if err := tmpl.Execute(&buf, data); err != nil {
 		return "", err
 	}
-
 	return buf.String(), nil
 }
 
@@ -184,7 +237,9 @@ type FBVariable struct {
 	gorm.Model
 	FBID      uint   `gorm:"index"`
 	Direction string `gorm:"size:10;check:direction IN ('input', 'output')"`
+	CdsType   string `gorm:"size:30"`
 	Signal    Signal `gorm:"foreignKey:SignalTag;references:Tag"`
+	Address   string `gorm:"size:255"`
 	SignalTag string `gorm:"size:255;not null"`
 	FuncAttr  string `gorm:"size:100;not null"` // Часть после последнего '_' в Tag сигнала
 }
@@ -197,13 +252,25 @@ func ParseFBInfo(signalTag string) (fbTag, funcAttr string, ok bool) {
 	}
 	return strings.Join(parts[:len(parts)-1], "_"), parts[len(parts)-1], true
 }
+func decrementString(channel string) (string, error) {
+	num, err := strconv.Atoi(channel)
+	if err != nil {
+		return "", fmt.Errorf("invalid channel number: %v", err)
+	}
+	return strconv.Itoa(num - 1), nil
+}
 
 // ParseFBFromSignal создает/обновляет FunctionBlock из сигнала
-func ParseFBFromSignal(signal Signal, direction string) (*FunctionBlock, *FBVariable) {
+func ParseFBFromSignal(signal Signal, direction string, addressTmpl string) (*FunctionBlock, *FBVariable) {
 	fbTag, funcAttr, _ := ParseFBInfo(signal.Tag)
+	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString})
+	if err != nil {
+		log.Fatal(err)
+	}
 	fb := &FunctionBlock{
 		Tag:       fbTag,
 		System:    signal.System,
+		SystemID:  signal.SystemID,
 		CdsType:   signal.FB,
 		NodeID:    signal.NodeID,
 		Equipment: signal.Equipment,
@@ -211,9 +278,29 @@ func ParseFBFromSignal(signal Signal, direction string) (*FunctionBlock, *FBVari
 
 	variable := &FBVariable{
 		SignalTag: signal.Tag,
+		Address:   addr,
+		CdsType:   signal.SignalType,
 		FuncAttr:  funcAttr,
 		Direction: direction,
 	}
 
 	return fb, variable
+}
+func ParseFromSignal(signal Signal, addressTmpl string) *FunctionBlock {
+	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString})
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to parse address %s: %v", signal.Tag, err))
+	}
+	fb := &FunctionBlock{
+		Tag:       signal.Tag,
+		System:    signal.System,
+		SystemID:  signal.SystemID,
+		Primary:   true,
+		CdsType:   signal.FB,
+		NodeID:    signal.NodeID,
+		Equipment: signal.Equipment,
+		Address:   addr,
+	}
+
+	return fb
 }

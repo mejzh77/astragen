@@ -59,6 +59,7 @@
     </style>
 </head>
 <body>
+    <a href="/" class="btn btn-outline-secondary mb-3">← На главную</a>
     <div class="container py-4">
         <h1 class="mb-4">Configuration Editor</h1>
         
@@ -201,12 +202,28 @@
             </div>
         </div>
     </div>
-
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/prism.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-yaml.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-go.min.js"></script>
     <script>
+        const socket = new WebSocket(`ws://${window.location.host}/ws`);
+
+        socket.onmessage = function(event) {
+            if (event.data === 'config_updated') {
+                loadConfig();
+            }
+        };
+        console.log("Script loaded"); // Проверка загрузки скрипта
+
+        // Функция для глубокого логирования
+        function debugLog(label, data) {
+            console.groupCollapsed(`DEBUG: ${label}`);
+            console.log("Data:", JSON.parse(JSON.stringify(data)));
+            console.trace(); // Покажет откуда был вызван
+            console.groupEnd();
+        }
         let configData = {};
         let currentMapPath = '';
         let currentMapItemIndex = -1;
@@ -283,105 +300,157 @@
                 });
             });
         }
+        // Глобальные переменные для управления состоянием
+        let functionBlocksHandlersInitialized = false;
 
-        // Render function blocks
         function renderFunctionBlocks() {
             const container = document.getElementById('functionBlocksContainer');
+
+            // Сохраняем состояние свернутости
+            const expandedBlocks = new Set();
+            document.querySelectorAll('.fb-card:not(.collapsed)').forEach(card => {
+                const fbName = card.querySelector('.fb-card-header h5').textContent;
+                expandedBlocks.add(fbName);
+            });
+
+            // Очищаем контейнер
             container.innerHTML = '';
-            
+
             if (!configData.function_blocks) {
                 configData.function_blocks = {};
             }
-            
-            Object.keys(configData.function_blocks).forEach((fbName, index) => {
+
+            // Рендерим блоки
+            Object.keys(configData.function_blocks).forEach(fbName => {
                 const fb = configData.function_blocks[fbName];
+                const isExpanded = expandedBlocks.has(fbName);
+
                 const card = document.createElement('div');
-                card.className = 'fb-card';
+                card.className = `fb-card ${isExpanded ? '' : 'collapsed'}`;
+                card.dataset.fbName = fbName;
                 card.innerHTML = `
-                   <div class="fb-card-header d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <span class="toggle-icon me-2">▼</span>
-                            <h5 class="mb-0">${fbName}</h5>
-                        </div>
-                        <button class="btn btn-sm btn-outline-danger remove-fb" data-fb="${fbName}">
-                            &times;
-                        </button>
-                    </div>
-                    <div class="fb-card-body">
-                        <div class="mb-3">
-                            <label class="form-label">ST Template</label>
-                            <textarea class="form-control st-template" data-fb="${fbName}" 
-                                style="height: 150px; font-family: monospace;">${fb.st_template || ''}</textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h6>Inputs</h6>
-                            <div class="map-items-container" id="inputs-${fbName}">
-                                ${renderMapItems(fb.in || {}, `function_blocks.${fbName}.in`)}
+                           <div class="fb-card-header d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="toggle-icon me-2">▼</span>
+                                    <h5 class="mb-0">${fbName}</h5>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger remove-fb" data-fb="${fbName}">
+                                    &times;
+                                </button>
                             </div>
-                            <button class="btn btn-sm btn-outline-primary add-map-item" 
-                                data-path="function_blocks.${fbName}.in">Add Input</button>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h6>Outputs</h6>
-                            <div class="map-items-container" id="outputs-${fbName}">
-                                ${renderMapItems(fb.out || {}, `function_blocks.${fbName}.out`)}
+                            <div class="fb-card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">ST Template</label>
+                                    <textarea class="form-control st-template" data-fb="${fbName}"
+                                        style="height: 150px; font-family: monospace;">${fb.st_template || ''}</textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <h6>Inputs</h6>
+                                    <div class="map-items-container" id="inputs-${fbName}">
+                                        ${renderMapItems(fb.in || {}, `function_blocks.${fbName}.in`)}
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary add-map-item"
+                                        data-path="function_blocks.${fbName}.in">Add Input</button>
+                                </div>
+
+                                <div class="mb-3">
+                                    <h6>Outputs</h6>
+                                    <div class="map-items-container" id="outputs-${fbName}">
+                                        ${renderMapItems(fb.out || {}, `function_blocks.${fbName}.out`)}
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary add-map-item"
+                                        data-path="function_blocks.${fbName}.out">Add Output</button>
+                                </div>
+
+                                <div class="mb-3">
+                                    <h6>OPC Items</h6>
+                                    <div class="list-items-container" id="opc-items-${fbName}">
+                                        ${renderListItems(fb.opc?.items || [], `function_blocks.${fbName}.opc.items`)}
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary add-list-item"
+                                        data-path="function_blocks.${fbName}.opc.items">Add OPC Item</button>
+                                </div>
                             </div>
-                            <button class="btn btn-sm btn-outline-primary add-map-item" 
-                                data-path="function_blocks.${fbName}.out">Add Output</button>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h6>OPC Items</h6>
-                            <div class="list-items-container" id="opc-items-${fbName}">
-                                ${renderListItems(fb.opc?.items || [], `function_blocks.${fbName}.opc.items`)}
-                            </div>
-                            <button class="btn btn-sm btn-outline-primary add-list-item" 
-                                data-path="function_blocks.${fbName}.opc.items">Add OPC Item</button>
-                        </div>
-                    </div>
                 `;
                 container.appendChild(card);
-                const header = card.querySelector('.fb-card-header');
-                header.addEventListener('click', (e) => {
-                    // Don't toggle if clicked on remove button
-                    if (!e.target.classList.contains('remove-fb')) {
-                        card.classList.toggle('collapsed');
+            });
+
+            // Инициализируем обработчики один раз
+            if (!functionBlocksHandlersInitialized) {
+                initFunctionBlocksHandlers();
+                functionBlocksHandlersInitialized = true;
+            }
+            //saveConfig();
+        }
+
+        function initFunctionBlocksHandlers() {
+            // Делегирование событий для всей страницы
+            document.addEventListener('click', function(e) {
+                // Обработка сворачивания/разворачивания
+                if (e.target.closest('.fb-card-header')) {
+                    const header = e.target.closest('.fb-card-header');
+                    if (!header.querySelector('.remove-fb').contains(e.target)) {
+                        header.parentElement.classList.toggle('collapsed');
+                    }
+                    return;
+                }
+
+                // Обработка добавления Input/Output
+                if (e.target.classList.contains('add-map-item')) {
+                    currentMapPath = e.target.dataset.path;
+                    showMapItemModal('', '');
+                    e.preventDefault();
+                    return;
+                }
+
+                // Обработка редактирования Input/Output
+                if (e.target.classList.contains('edit-map-item')) {
+                    currentMapPath = e.target.dataset.path;
+                    showMapItemModal(e.target.dataset.key, e.target.dataset.value);
+                    e.preventDefault();
+                    return;
+                }
+
+                // Обработка OPC Items
+                if (e.target.classList.contains('add-list-item')) {
+                    handleAddOpcItem(e.target.dataset.path);
+                    e.preventDefault();
+                    return;
+                }
+            });
+
+            // Обработчик для textarea (делегирование не работает хорошо для change)
+            document.querySelectorAll('#functionBlocksContainer').forEach(container => {
+                container.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('st-template')) {
+                        const fbName = e.target.closest('.fb-card').dataset.fbName;
+                        configData.function_blocks[fbName].st_template = e.target.value;
                     }
                 });
-                // Добавляем обработчик изменения текста шаблона
-                const textarea = card.querySelector('.st-template');
-                textarea.addEventListener('change', (e) => {
-                    configData.function_blocks[fbName].st_template = e.target.value;
-                 });
             });
-            document.querySelectorAll('.st-template').forEach(textarea => {
-                textarea.addEventListener('change', (e) => {
-                    const fbName = e.target.dataset.fb;
-                    configData.function_blocks[fbName].st_template = e.target.value;
-                });
-            });
-            
-            // Add event listeners for list items
-            document.querySelectorAll('.add-list-item').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const path = e.target.dataset.path;
-                    const parts = path.split('.');
-                    let current = configData;
-                    
-                    for (let i = 0; i < parts.length - 1; i++) {
-                        current = current[parts[i]];
-                    }
-                    
-                    if (!current[parts[parts.length - 1]]) {
-                        current[parts[parts.length - 1]] = [];
-                    }
-                    
-                    current[parts[parts.length - 1]].push('');
-                    renderFunctionBlocks();
-                });
-            });
+        }
+
+        function showMapItemModal(key, value) {
+            document.getElementById('mapItemKey').value = key;
+            document.getElementById('mapItemValue').value = value;
+            mapItemModal.show();
+        }
+
+        function handleAddOpcItem(path) {
+            const parts = path.split('.');
+            let current = configData;
+
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!current[parts[i]]) current[parts[i]] = {};
+                current = current[parts[i]];
+            }
+
+            const lastKey = parts[parts.length - 1];
+            if (!current[lastKey]) current[lastKey] = [];
+
+            current[lastKey].push('');
+            renderFunctionBlocks();
         }
         // Collapse/Expand all functionality
         document.getElementById('collapseAllFb').addEventListener('click', () => {
@@ -440,10 +509,35 @@
             modal.hide();
             document.getElementById('fbNameInput').value = '';
             renderFunctionBlocks();
+            saveConfig();
         });
-
+        // Вспомогательная функция для работы с вложенными свойствами
+        function getNested(obj, path) {
+            return path.reduce((o, k) => (o || {})[k], obj);
+        }
         // Remove function block
         document.addEventListener('click', (e) => {
+        // Обработка кнопок Add Input/Output
+            if (e.target.classList.contains('add-map-item')) {
+                currentMapPath = e.target.dataset.path;
+                document.getElementById('mapItemKey').value = '';
+                document.getElementById('mapItemValue').value = '';
+                new bootstrap.Modal(document.getElementById('mapItemModal')).show();
+                e.preventDefault();
+            }
+            
+            // Обработка кнопок Add OPC Item
+            if (e.target.classList.contains('add-list-item')) {
+                const path = e.target.dataset.path;
+                const parts = path.split('.');
+                let current = getNested(configData, parts.slice(0, -1));
+                const lastKey = parts[parts.length - 1];
+                
+                if (!current[lastKey]) current[lastKey] = [];
+                current[lastKey].push('');
+                renderFunctionBlocks();
+                e.preventDefault();
+            }
             if (e.target.classList.contains('remove-fb')) {
                 if (confirm('Are you sure you want to delete this Function Block?')) {
                     const fbName = e.target.dataset.fb;
@@ -474,7 +568,7 @@
                 </div>
             `).join('');
         }
-
+       
         // Render list items (for OPC items)
         function renderListItems(list, path) {
             if (!list) return '';
@@ -513,29 +607,49 @@
         // Save config
         async function saveConfig() {
             try {
-                // Collect all changes from inputs
-                document.querySelectorAll('[data-path]').forEach(element => {
-                    const path = element.dataset.path;
-                    const value = element.type === 'checkbox' ? element.checked : element.value;
-                    setConfigValue(path, value);
+                console.log("Starting save process...");
+
+                // Явно собираем все данные из интерфейса
+                const updatedConfig = {
+                    ...configData,
+                    function_blocks: {}
+                };
+
+                // Обрабатываем каждый функциональный блок
+                document.querySelectorAll('.fb-card').forEach(card => {
+                    const fbName = card.querySelector('.fb-card-header h5').textContent;
+                    updatedConfig.function_blocks[fbName] = {
+                        ...configData.function_blocks[fbName],
+                        st_template: card.querySelector('.st-template').value,
+                        // Inputs и Outputs берём из configData, так как они обновляются в реальном времени
+                        in: configData.function_blocks[fbName]?.in || {},
+                        out: configData.function_blocks[fbName]?.out || {},
+                        opc: {
+                            items: configData.function_blocks[fbName]?.opc?.items || []
+                        }
+                    };
                 });
-                
+
+                console.log("Data to save:", updatedConfig);
+
                 const response = await fetch('/api/config', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(configData),
+                    body: JSON.stringify(updatedConfig)
                 });
-                
-                if (response.ok) {
-                    alert('Config saved successfully');
-                } else {
-                    throw new Error('Failed to save config');
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || "Failed to save config");
                 }
+
+                //alert('Configuration saved successfully!');
+                await loadConfig(); // Перезагружаем конфиг для подтверждения
             } catch (error) {
-                console.error('Error saving config:', error);
-                alert('Failed to save config');
+                console.error("Save error:", error);
+                alert(`Save failed: ${error.message}`);
             }
         }
 
@@ -571,38 +685,34 @@
                 }
                 configData.systems.push('');
                 renderSystems();
+                //saveConfig();
             });
             
             // Save map item
             document.getElementById('saveMapItem').addEventListener('click', () => {
-                const key = document.getElementById('mapItemKey').value;
-                const value = document.getElementById('mapItemValue').value;
+                const key = document.getElementById('mapItemKey').value.trim();
+                const value = document.getElementById('mapItemValue').value.trim();
                 
                 if (!key) {
-                    alert('Key is required');
+                    alert('Key cannot be empty');
                     return;
                 }
                 
                 const parts = currentMapPath.split('.');
-                let current = configData;
+                let current = getNested(configData, parts.slice(0, -1));
+                const lastKey = parts[parts.length - 1];
                 
-                for (let i = 0; i < parts.length - 1; i++) {
-                    if (!current[parts[i]]) {
-                        current[parts[i]] = {};
-                    }
-                    current = current[parts[i]];
-                }
+                if (!current[lastKey]) current[lastKey] = {};
+                current[lastKey][key] = value;
                 
-                if (!current[parts[parts.length - 1]]) {
-                    current[parts[parts.length - 1]] = {};
-                }
-                
-                current[parts[parts.length - 1]][key] = value;
-                
-                const modal = bootstrap.Modal.getInstance(document.getElementById('mapItemModal'));
-                modal.hide();
-                
+                bootstrap.Modal.getInstance(document.getElementById('mapItemModal')).hide();
                 renderFunctionBlocks();
+                console.log("Saving map item", {
+                        key: document.getElementById('mapItemKey').value,
+                        value: document.getElementById('mapItemValue').value,
+                        path: currentMapPath
+                    });
+                saveConfig();
             });
             
             // Edit map item (delegated event)
@@ -635,18 +745,16 @@
                 
                 if (e.target.classList.contains('edit-list-item')) {
                     const path = e.target.dataset.path;
-                    const index = parseInt(e.target.dataset.index);
-                    
+                    const index = e.target.dataset.index;
                     const parts = path.split('.');
-                    let current = configData;
                     
-                    for (let i = 0; i < parts.length - 1; i++) {
-                        current = current[parts[i]];
-                    }
+                    let current = getNested(configData, parts.slice(0, -1));
+                    const lastKey = parts[parts.length - 1];
+                    const currentValue = current[lastKey][index];
                     
-                    const newValue = prompt('Enter new value:', current[parts[parts.length - 1]][index]);
-                    if (newValue !== null) {
-                        current[parts[parts.length - 1]][index] = newValue;
+                    const newValue = prompt('Edit OPC Item:', currentValue);
+                    if (newValue !== null && newValue !== currentValue) {
+                        current[lastKey][index] = newValue;
                         renderFunctionBlocks();
                     }
                 }

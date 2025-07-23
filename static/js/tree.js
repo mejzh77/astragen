@@ -48,7 +48,7 @@ function checkHasChildren(item) {
            (item.nodes && item.nodes.length > 0) ||
            (item.products && item.products.length > 0) ||
            (item.functionBlocks && item.functionBlocks.length > 0) ||
-    (item.signals && item.signals.length > 0);
+        (item.signals && item.signals.length > 0);
 }
 
 function buildChildrenHTML(item) {
@@ -80,7 +80,8 @@ function buildChildrenHTML(item) {
     if (item.nodes) return buildTreeHTML(item.nodes);
     if (item.products) return buildTreeHTML(item.products);
     if (item.functionBlocks) return buildTreeHTML(item.functionBlocks);
-    
+    if (item.signals) return buildTreeHTML(item.signals);
+
     return '';
 }
 function buildSystemHTML(system) {

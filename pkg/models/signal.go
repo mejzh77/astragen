@@ -11,11 +11,11 @@ type Signal struct {
 
 	// Связи
 
-	ProductID *uint    `gorm:"index"` // Опциональная связь с продуктом
-	Product   *Product `gorm:"foreignKey:ProductID"`
-
-	NodeID *uint `gorm:"index"` // Опциональная связь с узлом
-	Node   *Node `gorm:"foreignKey:NodeID"`
+	ProductID  *uint    `gorm:"index"` // Опциональная связь с продуктом
+	Product    *Product `gorm:"foreignKey:ProductID"`
+	ProductRef string   `gorm:"-"`
+	NodeID     *uint    `gorm:"index"` // Опциональная связь с узлом
+	Node       *Node    `gorm:"foreignKey:NodeID"`
 
 	// Основные поля (из Base)
 	Tag         string  `gorm:"uniqueIndex;not null"` // Соответствует Base.Tag
@@ -69,6 +69,7 @@ func (s *Signal) FromAI(ai AI) {
 	// Копируем общие поля из Base
 	s.Tag = ai.Tag
 	s.SystemRef = ai.System
+	s.ProductRef = ai.Product
 	s.Equipment = ai.Equipment
 	s.Name = ai.Name
 	s.Module = ai.Module
@@ -104,6 +105,7 @@ func (s *Signal) FromDI(di DI) {
 	s.Tag = di.Tag
 	s.SystemRef = di.System
 	s.Equipment = di.Equipment
+	s.ProductRef = di.Product
 	s.Name = di.Name
 	s.Module = di.Module
 	s.Channel = di.Channel
@@ -137,6 +139,7 @@ func (s *Signal) FromDO(do DO) {
 	// Копируем общие поля из Base
 	s.Tag = do.Tag
 	s.SystemRef = do.System
+	s.ProductRef = do.Product
 	s.Equipment = do.Equipment
 	s.Name = do.Name
 	s.Module = do.Module
@@ -155,6 +158,7 @@ func (s *Signal) FromDO(do DO) {
 func (s *Signal) FromAO(ao AO) {
 	s.SignalType = "AO"
 	s.Tag = ao.Tag
+	s.ProductRef = ao.Product
 	s.SystemRef = ao.System
 	s.Equipment = ao.Equipment
 	s.Name = ao.Name

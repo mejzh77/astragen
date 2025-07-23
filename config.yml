@@ -1,5 +1,5 @@
 db:
-    host: 192.168.0.119
+    host: 192.168.88.55
     port: "5432"
     user: user
     password: advengauser
@@ -17,6 +17,26 @@ sheets:
     - sheet_name: AQ
       signal_type: AO
 function_blocks:
+    AI:
+        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := {{.Address}});'
+        in:
+            address: i_rIn
+        out: {}
+        omx:
+            template: ""
+            attributes: {}
+        opc:
+            items: []
+    DI:
+        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := {{.Address}});'
+        in:
+            address: i_xIn
+        out: {}
+        omx:
+            template: ""
+            attributes: {}
+        opc:
+            items: []
     MTR:
         st_template: |
             {{.CdsType}}.{{.Tag}}(
@@ -32,10 +52,11 @@ function_blocks:
             {{- end }}
             );
         in:
-            pumpFault: FAULT
-            pumpOn: LSO
+            failire: i_xFault
+            work: i_xOn
         out:
             start: ON_CTL
+            stop: q_xOffCtl
         omx:
             template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
             attributes:
@@ -125,6 +146,47 @@ function_blocks:
                 - PI.QUALITY
                 - TIMEOUT
                 - EXC_ERRORS
+    VALVE_D:
+      st_template: |
+        {{.CdsType}}.{{.Tag}}(
+        {{- range $lhs, $rhs := .In }}
+            {{- if $rhs }}
+              {{ $lhs }} := {{ $rhs }},
+            {{- end }}
+        {{- end }}
+        {{- range $lhs, $rhs := .Out }}
+            {{- if $rhs }}
+              {{ $lhs }} => {{ $rhs }},
+            {{- end }}
+        {{- end }}
+        );
+      in:
+        closed: LSC
+        opened: LSO
+      out:
+        close: CLS_CTL
+        open: OPN_CTL
+      omx:
+        template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
+        attributes:
+          unit.System.Attributes.Description: .FB.Tag
+          unit.System.Attributes.TAGNAME: .FB.Equipment
+          unit.System.Attributes.Title: .FB.Tag
+      opc:
+        items:
+          - CONFIG.RUNTIME
+          - SET_MODE
+          - HMI_CMD
+          - DIAGN
+          - RQST_W
+          - CTL_W
+          - HMI_BLOCK
+          - BLOCK
+          - STATE
+          - PI.VALUE
+          - PI.QUALITY
+          - TIMEOUT
+          - EXC_ERRORS
 systems:
     - RSU_7
     - PAZ_7
@@ -132,9 +194,10 @@ systems:
     - PAZ_12
 nodesheet: Узлы (копия)
 default_opc:
-    base_path: ""
-    node_prefix: ""
-    namespace: ""
-    nodeIdType: ""
-    binding: ""
+    base_path: '{{.FB.CdsType}}.{{.FB.Tag}}'
+    node_prefix: Application.{{.FB.CdsType}}.{{.FB.Tag}}
+    namespace: urn:ProsoftSystems:regul_ua_server:iec_data
+    nodeIdType: string
+    binding: Introduced
 productsheet: Изделия
+address_template: '{{.Product.Tag}}_{{.Module}}.{{decrement .Channel}}'

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ .title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #resultContainer {
+            display: none;
+            margin-top: 20px;
+        }
+        #generatedContent {
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="btn btn-outline-secondary mb-3">← На главную</a>
+    <div class="container py-4">
+        <h1 class="mb-4">{{ .title }}</h1>
+        
+        <div class="form-section">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">System</label>
+                    <select class="form-select" id="systemFilter">
+                        <option value="">All Systems</option>
+                        {{range .systems}}
+                        <option value="{{.}}">{{.}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label">FB Type (from DB)</label>
+                    <select class="form-select" id="cdsTypeFilter">
+                        <option value="">All Types</option>
+                        {{range .cdsTypes}}
+                        <option value="{{.}}">{{.}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                        <label class="form-label">Node</label>
+                        <select class="form-select" id="nodeFilter">
+                            <option value="">All Nodes</option>
+                            {{range .nodes}}
+                            <option value="{{.Name}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <label class="form-label">Output Type</label>
+                    <select class="form-select" id="fileType">
+                        <option value="STDecl">ST Declaration</option>
+                        <option value="ST">ST Call</option>
+                        <option value="OMX">OMX</option>
+                        <option value="OPC">OPC</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary mt-3" id="generateBtn">
+                Generate
+            </button>
+        </div>
+        
+        <div id="resultContainer">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5>Generated Content <span id="countBadge" class="badge bg-secondary"></span></h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="copyBtn">
+                        Copy to Clipboard
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" id="downloadBtn">
+                        Download File
+                    </button>
+                </div>
+            </div>
+            <textarea class="form-control" id="generatedContent" rows="15"></textarea>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('systemFilter').addEventListener('change', async function() {
+            const system = this.value;
+            const nodeSelect = document.getElementById('nodeFilter');
+
+            if (!system) {
+                nodeSelect.innerHTML = '<option value="">All Nodes</option>';
+                nodeSelect.disabled = true;
+                return;
+            }
+
+            nodeSelect.disabled = true;
+            nodeSelect.innerHTML = '<option value="">Loading nodes...</option>';
+
+            try {
+                const response = await fetch(`/api/nodes?system=${system}`);
+                if (!response.ok) throw await response.json();
+
+                const nodes = await response.json();
+                let options = '<option value="">All Nodes</option>';
+                nodes.forEach(node => {
+                    options += `<option value="${node.Name}">${node.Name}</option>`;
+                });
+
+                nodeSelect.innerHTML = options;
+                nodeSelect.disabled = false;
+            } catch (error) {
+                nodeSelect.innerHTML = '<option value="">Error loading nodes</option>';
+                console.error('Failed to load nodes:', error);
+            }
+        });
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const system = document.getElementById('systemFilter').value;
+            const cdsType = document.getElementById('cdsTypeFilter').value;
+            //const fbType = document.getElementById('fbTypeFilter').value;
+            const node = document.getElementById('nodeFilter').value;
+            const fileType = document.getElementById('fileType').value;
+            
+            try {
+                const response = await fetch('/api/generate-import', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        system, 
+                        cdsType,
+                        node,
+                        fileType 
+                    })
+                });
+                
+                if (!response.ok) throw await response.json();
+                
+                const result = await response.json();
+                document.getElementById('generatedContent').value = result.content;
+                document.getElementById('countBadge').textContent = result.count + ' items';
+                document.getElementById('resultContainer').style.display = 'block';
+            } catch (error) {
+                console.error('Generation failed:', error);
+                alert('Generation failed: ' + (error.message || error));
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const content = document.getElementById('generatedContent');
+            content.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const content = document.getElementById('generatedContent').value;
+            const fileType = document.getElementById('fileType').value;
+            const filename = `export_${Date.now()}.${fileType.toLowerCase()}`;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

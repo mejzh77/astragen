@@ -170,15 +170,35 @@ func (s *System) ProductsToAPI() []gin.H {
 			"type":      "product",
 			"systemId":  p.SystemID,
 			"createdAt": p.CreatedAt,
+			"signals":   p.SignalsToAPI(),
 		})
 	}
 	return products
 }
+func (p *Product) SignalsToAPI() []gin.H {
+	var ss []gin.H
+	for _, s := range p.Signals {
+		ss = append(ss, s.ToAPI())
+	}
+	return ss
+}
 
+// Для FunctionBlock
+func (s *Signal) ToAPI() gin.H {
+	return gin.H{
+		"id":     s.ID,
+		"name":   s.Tag,
+		"type":   "signal",
+		"system": s.System,
+	}
+}
 func (n *Node) FunctionBlocksToAPI() []gin.H {
 	var fbs []gin.H
 	for _, fb := range n.FunctionBlocks {
-		fbs = append(fbs, fb.ToAPI())
+		if !fb.Primary {
+			fbs = append(fbs, fb.ToAPI())
+		}
+
 	}
 	return fbs
 }
@@ -187,8 +207,7 @@ func (fb *FunctionBlock) VariablesToAPI() []gin.H {
 	var vars []gin.H
 	for _, v := range fb.Variables {
 		vars = append(vars, gin.H{
-			"id": v.ID,
-
+			"id":        v.ID,
 			"type":      "variable",
 			"direction": v.Direction,
 			"signalTag": v.SignalTag,

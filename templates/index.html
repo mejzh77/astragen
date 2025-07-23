@@ -11,10 +11,16 @@
         
         <div class="d-flex gap-2 mb-4">
             <button id="syncBtn" class="btn btn-primary">Синхронизировать БД</button>
+            <button class="btn btn-warning" id="regenerateAllBtn">
+                Regenerate All Import Files
+            </button>
             <a href="/config" class="btn btn-secondary">Редактировать конфиг</a>
         </div>
         
         <div class="list-group">
+            <a href="/generate" class="list-group-item list-group-item-action">
+                Generate Import Files
+            </a>
             <a href="/tree" class="list-group-item list-group-item-action">
                 Древовидная структура
             </a>
@@ -22,6 +28,15 @@
     </div>
 
     <script>
+        const socket = new WebSocket(`ws://${window.location.host}/ws`);
+
+        socket.onmessage = function(event) {
+            if (event.data === 'config_updated') {
+                if (confirm('Конфиг был изменен. Перезагрузить?')) {
+                    location.reload();
+                }
+            }
+        };
         document.addEventListener('DOMContentLoaded', function() {
             // Обработчик кнопки синхронизации
             document.getElementById('syncBtn').addEventListener('click', async function() {
@@ -41,6 +56,26 @@
                 }
             });
         });
+document.getElementById('regenerateAllBtn').addEventListener('click', async () => {
+    if (!confirm('Regenerate import files for ALL function blocks?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/regenerate-import-files', {
+            method: 'POST'
+        });
+        
+        if (!response.ok) throw await response.json();
+        
+        const result = await response.json();
+        console.log('Regenerated files:', result);
+        alert(`Successfully regenerated ${result.count} function blocks`);
+    } catch (error) {
+        console.error('Regeneration failed:', error);
+        alert('Regeneration failed: ' + (error.message || error));
+    }
+});
     </script>
 </body>
 </html>

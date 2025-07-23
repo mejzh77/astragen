@@ -57,3 +57,6 @@ func (s *SyncService) GetTreeData() ([]gin.H, error) {
 
 	return treeData, nil
 }
+func (s *SyncService) GetAllSystems() ([]string, error) {
+	return s.systemRepo.GetAllSystemNames()
+}

@@ -33,6 +33,7 @@ func (s *SyncService) loadProductsFromSheets(ctx context.Context) ([]models.Prod
 
 		products = append(products, models.Product{
 			PN:       sp.PN,
+			Tag:      sp.Tag,
 			Name:     sp.Name,
 			Location: sp.Location,
 			SystemID: &system.ID,

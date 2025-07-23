@@ -42,7 +42,6 @@ type FBConfig struct {
 	OMX      OMXConfig         `yaml:"omx"`
 	OPC      OPCConfig         `yaml:"opc"`
 }
-
 type OPCConfig struct {
 	Items []string `yaml:"items"`
 }
@@ -56,15 +55,16 @@ type OPCItemTemplate struct {
 }
 
 type AppConfig struct {
-	DB             DatabaseConfig      `yaml:"db"`
-	SpreadsheetID  string              `yaml:"spreadsheet_id"`
-	Update         bool                `yaml:"update"`
-	Sheets         []SheetConfig       `yaml:"sheets"`
-	FunctionBlocks map[string]FBConfig `yaml:"function_blocks"`
-	Systems        []string            `yaml:"systems"`
-	NodeSheet      string              `yaml:"nodesheet"`
-	DefaultOPCItem OPCItemTemplate     `yaml:"default_opc"`
-	ProductSheet   string              `yaml:"productsheet"`
+	DB              *DatabaseConfig     `yaml:"db"`
+	SpreadsheetID   string              `yaml:"spreadsheet_id"`
+	Update          bool                `yaml:"update"`
+	Sheets          []SheetConfig       `yaml:"sheets"`
+	FunctionBlocks  map[string]FBConfig `yaml:"function_blocks"`
+	Systems         []string            `yaml:"systems"`
+	NodeSheet       string              `yaml:"nodesheet"`
+	DefaultOPCItem  OPCItemTemplate     `yaml:"default_opc"`
+	ProductSheet    string              `yaml:"productsheet"`
+	AddressTemplate string              `yaml:"address_template"`
 }
 
 // LoadConfig загружает конфиг из файла

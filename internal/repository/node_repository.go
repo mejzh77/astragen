@@ -72,16 +72,18 @@ func (r *NodeRepository) LinkFunctionBlock(node *models.Node, fb *models.Functio
 }
 
 // В node_repository.go
-func (r *NodeRepository) FindSimilarInSystem(name string) ([]models.Node, error) {
+func (r *NodeRepository) FindSimilarInSystem(name string, systemID uint) ([]models.Node, error) {
 	var nodes []models.Node
 
 	// Используем полнотекстовый поиск или similarity-функции
 	// Пример для PostgreSQL:
 	query := `SELECT * FROM nodes
+         		JOIN public.node_systems ns on nodes.id = ns.node_id 
+         		WHERE ns.system_id = ? 
               ORDER BY similarity(name, ?) DESC 
               LIMIT 3`
 
-	if err := r.db.Raw(query, name).Scan(&nodes).Error; err != nil {
+	if err := r.db.Raw(query, systemID, name).Scan(&nodes).Error; err != nil {
 		return nil, err
 	}
 
@@ -131,6 +133,20 @@ func (r *NodeRepository) GetWithSystems(id string, node *models.Node) error {
 		Where("id = ?", id).
 		First(node).
 		Error
+}
+func (r *NodeRepository) GetNodesBySystem(systemName string) ([]*models.Node, error) {
+	var nodes []*models.Node
+	err := r.db.Joins("JOIN node_systems ON node_systems.node_id = nodes.id").
+		Joins("JOIN systems ON systems.id = node_systems.system_id").
+		Where("systems.name = ?", systemName).
+		Find(&nodes).Error
+	return nodes, err
+}
+
+func (r *NodeRepository) GetAllNodeNames() ([]string, error) {
+	var names []string
+	err := r.db.Model(&models.Node{}).Pluck("name", &names).Error
+	return names, err
 }
 
 func (r *NodeRepository) GetWithFBs(id string, node *models.Node) error {

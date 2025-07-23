@@ -1,19 +1,34 @@
 package api
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/mejzh77/astragen/configs/config"
 	"github.com/mejzh77/astragen/internal/sync"
+	"log"
+	"net/http"
+	"strings"
+	stdsync "sync"
 )
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true // Разрешаем все origin (в продакшене нужно ограничить)
+	},
+}
+
 type WebService struct {
-	syncService *sync.SyncService
+	syncService  *sync.SyncService
+	clients      map[*websocket.Conn]bool
+	clientsMutex stdsync.Mutex
 }
 
 func NewWebService(syncService *sync.SyncService) *WebService {
 	return &WebService{
 		syncService: syncService,
+		clients:     make(map[*websocket.Conn]bool),
 	}
 }
 
@@ -26,8 +41,42 @@ func (s *WebService) RegisterRoutes(r *gin.Engine) {
 	r.GET("/api/config", s.GetConfig)
 	r.POST("/api/config", s.UpdateConfig)
 	r.GET("/config", s.ConfigPage)
+	r.GET("/ws", s.handleWebSocket)
+	r.GET("/generate", s.GenerateImportPage)
+	r.POST("/api/generate-import", s.GenerateImportFile)
+	r.POST("/api/regenerate-import-files", s.RegenerateAllImportFiles)
+	r.GET("/api/nodes", s.GetNodesBySystem)
+
 }
 
+// Обработчик WebSocket
+func (s *WebService) handleWebSocket(c *gin.Context) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Printf("WebSocket upgrade failed: %v", err)
+		return
+	}
+
+	// Добавляем клиента
+	s.clientsMutex.Lock()
+	s.clients[conn] = true
+	s.clientsMutex.Unlock()
+
+	defer func() {
+		// Удаляем клиента при отключении
+		s.clientsMutex.Lock()
+		delete(s.clients, conn)
+		s.clientsMutex.Unlock()
+		conn.Close()
+	}()
+
+	// Просто слушаем соединение (сообщения не обрабатываем)
+	for {
+		if _, _, err := conn.NextReader(); err != nil {
+			break
+		}
+	}
+}
 func (s *WebService) IndexPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"title": "ASTRA Dashboard",
@@ -36,6 +85,71 @@ func (s *WebService) IndexPage(c *gin.Context) {
 func (s *WebService) ConfigPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "config.html", gin.H{
 		"title": "Редактор конфигурации",
+	})
+}
+func (s *WebService) GenerateImportPage(c *gin.Context) {
+	systems, _ := s.syncService.GetAllSystems()
+	cdsTypes, _ := s.syncService.GetAllCDSTypes()
+
+	c.HTML(http.StatusOK, "generate.html", gin.H{
+		"title":    "Generate Import Files",
+		"systems":  systems,
+		"cdsTypes": cdsTypes,
+		"fbTypes":  getAvailableFBTypes(), // из конфига
+	})
+}
+
+func getAvailableFBTypes() []string {
+	var types []string
+	for k := range config.Cfg.FunctionBlocks {
+		types = append(types, k)
+	}
+	return types
+}
+func (s *WebService) GenerateImportFile(c *gin.Context) {
+	var request struct {
+		System   string `json:"system"`
+		CdsType  string `json:"cdsType"`
+		Node     string `json:"node"`
+		FileType string `json:"fileType"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	fbs, err := s.syncService.GetFilteredFunctionBlocks(request.System, request.CdsType, request.Node)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var content strings.Builder
+	for _, fb := range fbs {
+		switch request.FileType {
+		case "STDecl":
+			if fb.Call != "" {
+				content.WriteString(fb.Declaration + "\n\n")
+			}
+		case "ST":
+			if fb.Call != "" {
+				content.WriteString(fb.Call + "\n\n")
+			}
+		case "OMX":
+			if fb.OMX != "" {
+				content.WriteString(fb.OMX + "\n\n")
+			}
+		case "OPC":
+			if fb.OPC != "" {
+				content.WriteString(fb.OPC + "\n\n")
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"content": content.String(),
+		"count":   len(fbs),
 	})
 }
 
@@ -51,7 +165,16 @@ func (s *WebService) GetConfig(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, config)
 }
+func (s *WebService) GetNodesBySystem(c *gin.Context) {
+	system := c.Query("system")
+	nodes, err := s.syncService.GetNodesBySystem(system)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
+	c.JSON(http.StatusOK, nodes)
+}
 func (s *WebService) UpdateConfig(c *gin.Context) {
 	var updates map[string]interface{}
 	if err := c.BindJSON(&updates); err != nil {
@@ -69,12 +192,20 @@ func (s *WebService) UpdateConfig(c *gin.Context) {
 		})
 		return
 	}
+	// Рассылаем уведомление всем клиентам
+	s.clientsMutex.Lock()
+	for client := range s.clients {
+		if err := client.WriteMessage(websocket.TextMessage, []byte("config_updated")); err != nil {
+			log.Printf("Failed to send WS message: %v", err)
+			delete(s.clients, client)
+			client.Close()
+		}
+	}
+	s.clientsMutex.Unlock()
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "Config updated",
-	})
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
+
 func (s *WebService) TreePage(c *gin.Context) {
 	treeData, err := s.syncService.GetTreeData()
 	if err != nil {
@@ -143,5 +274,17 @@ func (s *WebService) SyncData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "Database synchronized",
+	})
+}
+func (s *WebService) RegenerateAllImportFiles(c *gin.Context) {
+	content, err := s.syncService.RegenerateAllImportFiles()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"content": content,
+		"count":   len(content),
 	})
 }
