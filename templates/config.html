@@ -61,35 +61,35 @@
 <body>
     <a href="/" class="btn btn-outline-secondary mb-3">← На главную</a>
     <div class="container py-4">
-        <h1 class="mb-4">Configuration Editor</h1>
+        <h1 class="mb-4">Настройки</h1>
         
         <div class="mb-3">
-            <button id="saveBtn" class="btn btn-primary">Save Changes</button>
-            <button id="reloadBtn" class="btn btn-secondary">Reload</button>
+            <button id="saveBtn" class="btn btn-primary">Сохранить</button>
+            <button id="reloadBtn" class="btn btn-secondary">Перезагрузить</button>
         </div>
         
         <!-- Основные настройки -->
         <div class="section">
-            <h2>Database Settings</h2>
+            <h2>НАстройки подключения к БД</h2>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Host</label>
+                    <label class="form-label">Хост</label>
                     <input type="text" class="form-control" data-path="db.host">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Port</label>
+                    <label class="form-label">Порт</label>
                     <input type="text" class="form-control" data-path="db.port">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">User</label>
+                    <label class="form-label">Пользователь</label>
                     <input type="text" class="form-control" data-path="db.user">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Password</label>
+                    <label class="form-label">Пароль</label>
                     <input type="password" class="form-control" data-path="db.password">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Database Name</label>
+                    <label class="form-label">Имя БД</label>
                     <input type="text" class="form-control" data-path="db.name">
                 </div>
                 <div class="col-md-2">
@@ -106,18 +106,18 @@
 
         <!-- Spreadsheet Settings -->
         <div class="section">
-            <h2>Spreadsheet Settings</h2>
+            <h2>Настройки чтения из таблицы</h2>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Spreadsheet ID</label>
+                    <label class="form-label">ID таблицы</label>
                     <input type="text" class="form-control" data-path="spreadsheet_id">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Node Sheet</label>
+                    <label class="form-label">Имя таблицы с узлами</label>
                     <input type="text" class="form-control" data-path="nodesheet">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Product Sheet</label>
+                    <label class="form-label">Имя таблицы с изделиями</label>
                     <input type="text" class="form-control" data-path="productsheet">
                 </div>
                 <div class="col-md-2">
@@ -128,24 +128,32 @@
                 </div>
             </div>
         </div>
-
+        <div class="section">
+            <h2>Настройки сигналов</h2>
+            <div id="signal_addr" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Шаблон адреса</label>
+                    <input type="text" class="form-control" data-path="address_template">
+                </div>
+            </div>
+        </div>
         <!-- Systems List -->
         <div class="section">
-            <h2>Systems</h2>
+            <h2>Системы</h2>
             <div id="systemsList">
                 <!-- Systems will be added here -->
             </div>
-            <button class="btn btn-sm btn-outline-primary mt-2" id="addSystem">Add System</button>
+            <button class="btn btn-sm btn-outline-primary mt-2" id="addSystem">Добавить систему</button>
         </div>
 
         <!-- Function Blocks -->
         <div class="section">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Function Blocks</h2>
+            <h2>Функциональные блоки</h2>
             <div>
-                <button class="btn btn-outline-secondary me-2" id="collapseAllFb">Collapse All</button>
-                <button class="btn btn-outline-secondary me-2" id="expandAllFb">Expand All</button>
-                <button class="btn btn-success" id="addFbBtn">+ Add Block</button>
+                <button class="btn btn-outline-secondary me-2" id="collapseAllFb">Свернуть все</button>
+                <button class="btn btn-outline-secondary me-2" id="expandAllFb">Развернуть все</button>
+                <button class="btn btn-success" id="addFbBtn">+ Добавить</button>
             </div>
         </div>
         
@@ -159,12 +167,12 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add New Function Block</h5>
+                    <h5 class="modal-title">Добавить Новый функциональный блок</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Function Block Name</label>
+                        <label class="form-label">Тэг функционального блока</label>
                         <input type="text" class="form-control" id="fbNameInput">
                     </div>
                 </div>
@@ -182,16 +190,16 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Map Item</h5>
+                    <h5 class="modal-title">Редактировать</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Key</label>
+                        <label class="form-label">Имя переменной в ФБ</label>
                         <input type="text" class="form-control" id="mapItemKey">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Value</label>
+                        <label class="form-label">Имя переменной в таблице</label>
                         <input type="text" class="form-control" id="mapItemValue">
                     </div>
                 </div>
@@ -242,6 +250,7 @@
 
         // Render the entire config
         function renderConfig() {
+            console.log(configData)
             // Database settings
             setInputValue('db.host', configData.db?.host);
             setInputValue('db.port', configData.db?.port);
@@ -258,7 +267,7 @@
             
             // Systems
             renderSystems();
-            
+            renderSignalAddr()
             // Function blocks
             renderFunctionBlocks();
         }
@@ -302,7 +311,30 @@
         }
         // Глобальные переменные для управления состоянием
         let functionBlocksHandlersInitialized = false;
+        function renderSignalAddr(){
+            const container = document.getElementById('signal_addr');
 
+            // Очищаем контейнер
+            container.innerHTML = '';
+
+            if (!configData.signal_addresses) {
+                configData.signal_addresses = {};
+            }
+
+            // Рендерим блоки
+
+            const template = configData.signal_addresses;
+            console.log(template)
+            const card = document.createElement('div');
+            card.innerHTML = `
+                    <div class="map-items-container" id="inputs-signal_addresses">
+                                    ${renderMapItems(template || {}, `signal_addresses`)}
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary add-map-item"
+                                    data-path="signal_addresses">Добавить</button>
+            `;
+            container.appendChild(card);
+        }
         function renderFunctionBlocks() {
             const container = document.getElementById('functionBlocksContainer');
 
@@ -324,7 +356,7 @@
             Object.keys(configData.function_blocks).forEach(fbName => {
                 const fb = configData.function_blocks[fbName];
                 const isExpanded = expandedBlocks.has(fbName);
-
+                console.log(fb)
                 const card = document.createElement('div');
                 card.className = `fb-card ${isExpanded ? '' : 'collapsed'}`;
                 card.dataset.fbName = fbName;
@@ -340,36 +372,36 @@
                             </div>
                             <div class="fb-card-body">
                                 <div class="mb-3">
-                                    <label class="form-label">ST Template</label>
+                                    <label class="form-label">Шаблон вызова на ST</label>
                                     <textarea class="form-control st-template" data-fb="${fbName}"
                                         style="height: 150px; font-family: monospace;">${fb.st_template || ''}</textarea>
                                 </div>
 
                                 <div class="mb-3">
-                                    <h6>Inputs</h6>
+                                    <h6>Входные переменные</h6>
                                     <div class="map-items-container" id="inputs-${fbName}">
                                         ${renderMapItems(fb.in || {}, `function_blocks.${fbName}.in`)}
                                     </div>
                                     <button class="btn btn-sm btn-outline-primary add-map-item"
-                                        data-path="function_blocks.${fbName}.in">Add Input</button>
+                                        data-path="function_blocks.${fbName}.in">Добавить входную переменную</button>
                                 </div>
 
                                 <div class="mb-3">
-                                    <h6>Outputs</h6>
+                                    <h6>Выходные переменные</h6>
                                     <div class="map-items-container" id="outputs-${fbName}">
                                         ${renderMapItems(fb.out || {}, `function_blocks.${fbName}.out`)}
                                     </div>
                                     <button class="btn btn-sm btn-outline-primary add-map-item"
-                                        data-path="function_blocks.${fbName}.out">Add Output</button>
+                                        data-path="function_blocks.${fbName}.out">Добавить выходную переменную</button>
                                 </div>
 
                                 <div class="mb-3">
-                                    <h6>OPC Items</h6>
+                                    <h6>Переменные OPC</h6>
                                     <div class="list-items-container" id="opc-items-${fbName}">
                                         ${renderListItems(fb.opc?.items || [], `function_blocks.${fbName}.opc.items`)}
                                     </div>
                                     <button class="btn btn-sm btn-outline-primary add-list-item"
-                                        data-path="function_blocks.${fbName}.opc.items">Add OPC Item</button>
+                                        data-path="function_blocks.${fbName}.opc.items">Добавить переменную в OPC</button>
                                 </div>
                             </div>
                 `;
@@ -481,12 +513,12 @@
         document.getElementById('confirmAddFb').addEventListener('click', () => {
             const fbName = document.getElementById('fbNameInput').value.trim();
             if (!fbName) {
-                alert('Function Block name is required');
+                alert('Необходимо указать имя функционального блока');
                 return;
             }
             
             if (configData.function_blocks[fbName]) {
-                alert('Function Block with this name already exists');
+                alert('Функциональный блок с таким именем уже существует');
                 return;
             }
             
@@ -539,7 +571,7 @@
                 e.preventDefault();
             }
             if (e.target.classList.contains('remove-fb')) {
-                if (confirm('Are you sure you want to delete this Function Block?')) {
+                if (confirm('Вы уверены, что хотите удалить функциональный блок?')) {
                     const fbName = e.target.dataset.fb;
                     delete configData.function_blocks[fbName];
                     renderFunctionBlocks();
@@ -557,7 +589,7 @@
                         <div>
                             <button class="btn btn-sm btn-outline-secondary edit-map-item" 
                                 data-path="${path}" data-key="${key}" data-value="${map[key]}" data-index="${index}">
-                                Edit
+                                Редактировать
                             </button>
                             <button class="btn btn-sm btn-outline-danger remove-map-item" 
                                 data-path="${path}" data-key="${key}">

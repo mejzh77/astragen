@@ -37,10 +37,10 @@ type Signal struct {
 	Comment     string  `gorm:"type:TEXT"`
 
 	// Поля для всех типов сигналов
-	SignalType string  `gorm:"size:2;index"` // DI, AI, DO, AO
+	SignalType string  `gorm:"size:2;index"` // DI, AI, DQ, AQ
 	Value      float64 `gorm:"type:decimal(20,6)"`
 
-	// Специфичные поля для аналоговых сигналов (AI/AO)
+	// Специфичные поля для аналоговых сигналов (AI/AQ)
 	RangeMin    *float64 `gorm:"type:decimal(20,6)"`
 	RangeMax    *float64 `gorm:"type:decimal(20,6)"`
 	Unit        *string  `gorm:"size:20"`
@@ -52,7 +52,7 @@ type Signal struct {
 	Format      *string  `gorm:"size:50"`
 	Filter      *string  `gorm:"size:50"`
 
-	// Специфичные поля для дискретных сигналов (DI/DO)
+	// Специфичные поля для дискретных сигналов (DI/DQ)
 	Category  *string  `gorm:"size:100"`          // DI.Category
 	Inversion *string  `gorm:"size:50"`           // DI.Inversion
 	TON       *float64 `gorm:"type:decimal(9,3)"` // Timer On Delay
@@ -133,30 +133,30 @@ func (s *Signal) FromDI(di DI) {
 	// (здесь нужно добавить логику преобразования из DI.Value)
 }
 
-// Аналогичные методы FromDO и FromAO
-func (s *Signal) FromDO(do DO) {
-	s.SignalType = "DO"
+// Аналогичные методы FromDQ и FromAQ
+func (s *Signal) FromDQ(dq DQ) {
+	s.SignalType = "DQ"
 	// Копируем общие поля из Base
-	s.Tag = do.Tag
-	s.SystemRef = do.System
-	s.ProductRef = do.Product
-	s.Equipment = do.Equipment
-	s.Name = do.Name
-	s.Module = do.Module
-	s.Channel = do.Channel
-	s.Crate = do.Crate
-	s.Place = do.Place
-	s.Property = do.Property
-	s.Address = do.Adr
-	s.ModbusAddr = do.ModbusAddr
-	s.NodeRef = do.NodeID
-	s.FB = do.FB
-	s.CheckStatus = do.CheckStatus
-	s.Comment = do.Comment
+	s.Tag = dq.Tag
+	s.SystemRef = dq.System
+	s.ProductRef = dq.Product
+	s.Equipment = dq.Equipment
+	s.Name = dq.Name
+	s.Module = dq.Module
+	s.Channel = dq.Channel
+	s.Crate = dq.Crate
+	s.Place = dq.Place
+	s.Property = dq.Property
+	s.Address = dq.Adr
+	s.ModbusAddr = dq.ModbusAddr
+	s.NodeRef = dq.NodeID
+	s.FB = dq.FB
+	s.CheckStatus = dq.CheckStatus
+	s.Comment = dq.Comment
 }
 
-func (s *Signal) FromAO(ao AO) {
-	s.SignalType = "AO"
+func (s *Signal) FromAQ(ao AQ) {
+	s.SignalType = "AQ"
 	s.Tag = ao.Tag
 	s.ProductRef = ao.Product
 	s.SystemRef = ao.System

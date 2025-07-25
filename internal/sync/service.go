@@ -97,7 +97,11 @@ func (s *SyncService) GetConfig() (map[string]interface{}, error) {
 
 	// Systems
 	configMap["systems"] = cfg.Systems
-
+	addresses := make(map[string]interface{})
+	for t, s := range cfg.AddressTemplate {
+		addresses[t] = s
+	}
+	configMap["signal_addresses"] = addresses
 	// Function blocks
 	fbs := make(map[string]interface{})
 	for name, fb := range cfg.FunctionBlocks {

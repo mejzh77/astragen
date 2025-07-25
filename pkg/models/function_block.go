@@ -64,21 +64,59 @@ type OMXData struct {
 	UUID string
 }
 
-func (fb *FunctionBlock) GenerateSTCode(fbTemplate string, defaultInputs, defaultOutputs map[string]string) (string, error) {
-	// Разделяем переменные на входы и выходы
+func ProcessIOPair(pairIn, pairOut map[string]string, fb *FunctionBlock) (IOPair, IOPair) {
 	inputs := make(IOPair)
 	outputs := make(IOPair)
+	if fb.CdsType == "DI" {
+		fmt.Print("")
+	}
+	for lhs, rhs := range pairIn {
+		if rhs == "address" {
+			inputs[rhs] = lhs
+		}
+	}
+	for lhs, rhs := range pairOut {
+		if rhs == "address" {
+			outputs[rhs] = lhs
+		}
+	}
 	for _, v := range fb.Variables {
 		switch v.Direction {
 		case "input":
-			inputs[defaultInputs[v.FuncAttr]] = v.SignalTag
+			for lhs, rhs := range pairIn {
+				if rhs == "address" {
+					inputs[rhs] = lhs
+				}
+				parts := strings.Split(rhs, ".")
+				if v.FuncAttr == parts[0] {
+					if len(parts) > 1 {
+						inputs[lhs] = v.SignalTag + "." + parts[1]
+					} else {
+						inputs[lhs] = v.SignalTag
+					}
+				}
+			}
 		case "output":
-			outputs[defaultOutputs[v.FuncAttr]] = v.SignalTag
+			for lhs, rhs := range pairOut {
+				if rhs == "address" {
+					outputs[rhs] = lhs
+				}
+				parts := strings.Split(rhs, ".")
+				if v.FuncAttr == parts[0] {
+					if len(parts) > 1 {
+						outputs[lhs] = v.SignalTag + parts[1]
+					} else {
+						outputs[lhs] = v.SignalTag
+					}
+				}
+			}
 		}
 	}
-	if v, ok := defaultInputs["address"]; ok {
-		inputs["address"] = v
-	}
+	return inputs, outputs
+}
+func (fb *FunctionBlock) GenerateSTCode(fbTemplate string, defaultInputs, defaultOutputs map[string]string) (string, error) {
+	// Разделяем переменные на входы и выходы
+	inputs, outputs := ProcessIOPair(defaultInputs, defaultOutputs, fb)
 	// Подготавливаем данные для шаблона
 	data := FBCallParams{
 		Tag:     fb.Tag,
@@ -87,28 +125,6 @@ func (fb *FunctionBlock) GenerateSTCode(fbTemplate string, defaultInputs, defaul
 		In:      inputs,
 		Out:     outputs,
 	}
-
-	// Создаем и выполняем шаблон
-	tmpl, err := template.New("fbCall").Parse(fbTemplate)
-	if err != nil {
-		return "", err
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
-}
-func (fb *FBVariable) GenerateSTCode(fbTemplate string, inputs map[string]string) (string, error) {
-	// Подготавливаем данные для шаблона
-	data := FBCallParams{
-		Tag:     fb.SignalTag,
-		CdsType: fb.CdsType,
-		In:      inputs,
-	}
-
 	// Создаем и выполняем шаблон
 	tmpl, err := template.New("fbCall").Parse(fbTemplate)
 	if err != nil {
@@ -140,9 +156,7 @@ func FormatVarDeclaration(tag, varType string, indentSize, totalWidth int) strin
 func (fb *FunctionBlock) GenerateSTDecl() (string, error) {
 	return FormatVarDeclaration(fb.Tag, "FB_"+fb.CdsType, 4, 40), nil
 }
-func (fb *FBVariable) GenerateSTDecl() (string, error) {
-	return FormatVarDeclaration(fb.SignalTag, "FB_"+fb.CdsType, 4, 40), nil
-}
+
 func (fb *FunctionBlock) GenerateOMX(tmplBase string, attributes map[string]string) (string, error) {
 	// Шаг 2: Генерируем блок атрибутов
 	tmplWithAttrs := strings.Replace(tmplBase, `</object>`, "", 1)
@@ -286,6 +300,7 @@ func ParseFBFromSignal(signal Signal, direction string, addressTmpl string) (*Fu
 
 	return fb, variable
 }
+
 func ParseFromSignal(signal Signal, addressTmpl string) *FunctionBlock {
 	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString})
 	if err != nil {

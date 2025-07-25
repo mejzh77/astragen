@@ -44,11 +44,11 @@ type AI struct {
 	Filter string  `gsheets:"filter"`
 }
 
-type DO struct {
+type DQ struct {
 	Base `gsheets:",squash"`
 }
 
-type AO struct {
+type AQ struct {
 	Base `gsheets:",squash"`
 }
 

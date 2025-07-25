@@ -117,10 +117,10 @@ func (s *SyncService) parseSheetData(rows [][]interface{}, sheetCfg config.Sheet
 			signal.FromDI(*v)
 		case *models.AI:
 			signal.FromAI(*v)
-		case *models.DO:
-			signal.FromDO(*v)
-		case *models.AO:
-			signal.FromAO(*v)
+		case *models.DQ:
+			signal.FromDQ(*v)
+		case *models.AQ:
+			signal.FromAQ(*v)
 		}
 
 		signal.SignalType = sheetCfg.SheetName

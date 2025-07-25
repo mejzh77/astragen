@@ -29,9 +29,9 @@
         <div class="form-section">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">System</label>
+                    <label class="form-label">Система</label>
                     <select class="form-select" id="systemFilter">
-                        <option value="">All Systems</option>
+                        <option value="">Все системы</option>
                         {{range .systems}}
                         <option value="{{.}}">{{.}}</option>
                         {{end}}
@@ -39,9 +39,9 @@
                 </div>
                 
                 <div class="col-md-4">
-                    <label class="form-label">FB Type (from DB)</label>
+                    <label class="form-label">Тип ФБ</label>
                     <select class="form-select" id="cdsTypeFilter">
-                        <option value="">All Types</option>
+                        <option value="">Все типы</option>
                         {{range .cdsTypes}}
                         <option value="{{.}}">{{.}}</option>
                         {{end}}
@@ -49,9 +49,9 @@
                 </div>
                 
                 <div class="col-md-4">
-                        <label class="form-label">Node</label>
+                        <label class="form-label">Узел</label>
                         <select class="form-select" id="nodeFilter">
-                            <option value="">All Nodes</option>
+                            <option value="">Все узлы</option>
                             {{range .nodes}}
                             <option value="{{.Name}}">{{.Name}}</option>
                             {{end}}
@@ -61,30 +61,30 @@
             
             <div class="row mt-3">
                 <div class="col-md-4">
-                    <label class="form-label">Output Type</label>
+                    <label class="form-label">Выходной файл</label>
                     <select class="form-select" id="fileType">
-                        <option value="STDecl">ST Declaration</option>
-                        <option value="ST">ST Call</option>
-                        <option value="OMX">OMX</option>
+                        <option value="STDecl">Объявление ST</option>
+                        <option value="ST">Вызов ST</option>
+                        <option value="OMX">Импорт AStudio</option>
                         <option value="OPC">OPC</option>
                     </select>
                 </div>
             </div>
             
             <button class="btn btn-primary mt-3" id="generateBtn">
-                Generate
+                Генерировать
             </button>
         </div>
         
         <div id="resultContainer">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5>Generated Content <span id="countBadge" class="badge bg-secondary"></span></h5>
+                <h5>Результат <span id="countBadge" class="badge bg-secondary"></span></h5>
                 <div>
                     <button class="btn btn-sm btn-outline-secondary" id="copyBtn">
-                        Copy to Clipboard
+                        Копировать в буфер
                     </button>
                     <button class="btn btn-sm btn-outline-primary" id="downloadBtn">
-                        Download File
+                        Скачать файл
                     </button>
                 </div>
             </div>
@@ -99,7 +99,7 @@
             const nodeSelect = document.getElementById('nodeFilter');
 
             if (!system) {
-                nodeSelect.innerHTML = '<option value="">All Nodes</option>';
+                nodeSelect.innerHTML = '<option value="">Все узлы</option>';
                 nodeSelect.disabled = true;
                 return;
             }
@@ -112,7 +112,7 @@
                 if (!response.ok) throw await response.json();
 
                 const nodes = await response.json();
-                let options = '<option value="">All Nodes</option>';
+                let options = '<option value="">Все узлы</option>';
                 nodes.forEach(node => {
                     options += `<option value="${node.Name}">${node.Name}</option>`;
                 });
@@ -160,7 +160,10 @@
         document.getElementById('copyBtn').addEventListener('click', () => {
             const content = document.getElementById('generatedContent');
             content.select();
-            document.execCommand('copy');
+            navigator.clipboard.readText().then(
+                (clipText) => (content.innerText += clipText),
+            );
+            //document.execCommand('copy');
             alert('Copied to clipboard!');
         });
 

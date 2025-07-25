@@ -13,14 +13,24 @@ sheets:
     - sheet_name: AI
       signal_type: AI
     - sheet_name: DQ
-      signal_type: DO
+      signal_type: DQ
     - sheet_name: AQ
-      signal_type: AO
+      signal_type: AQ
 function_blocks:
     AI:
         st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := {{.Address}});'
         in:
-            address: i_rIn
+            i_rIn: address
+        out: {}
+        omx:
+            template: ""
+            attributes: {}
+        opc:
+            items: []
+    AQ:
+        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});'
+        in:
+            i_rIn: address
         out: {}
         omx:
             template: ""
@@ -28,9 +38,19 @@ function_blocks:
         opc:
             items: []
     DI:
-        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := {{.Address}});'
+        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});'
         in:
-            address: i_xIn
+            i_xIn: address
+        out: {}
+        omx:
+            template: ""
+            attributes: {}
+        opc:
+            items: []
+    DQ:
+        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});'
+        in:
+            i_xIn: address
         out: {}
         omx:
             template: ""
@@ -42,21 +62,23 @@ function_blocks:
             {{.CdsType}}.{{.Tag}}(
             {{- range $lhs, $rhs := .In }}
                 {{- if $rhs }}
-                  {{ $lhs }} := {{ $rhs }},
+                  {{ $lhs }} := DI.{{ $rhs }},
                 {{- end }}
             {{- end }}
             {{- range $lhs, $rhs := .Out }}
                 {{- if $rhs }}
-                  {{ $lhs }} => {{ $rhs }},
+                  {{ $lhs }} => DQ.{{ $rhs }}.i_xIn,
                 {{- end }}
             {{- end }}
             );
         in:
-            failire: i_xFault
-            work: i_xOn
+            i_eOnQuality: work.q_xQuality
+            i_rFrequency: spFreq
+            i_xFault: failure
+            i_xOn: work.q_xValue
         out:
-            start: ON_CTL
-            stop: q_xOffCtl
+            q_xOffCtl: stop
+            q_xOnCtl: start
         omx:
             template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
             attributes:
@@ -93,10 +115,10 @@ function_blocks:
             {{- end }}
             );
         in:
-            pumpFault: FAULT
-            pumpOn: LSO
+            FAULT: pumpFault
+            LSO: pumpOn
         out:
-            start: ON_CTL
+            ON_CTL: start
         omx:
             template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
             attributes:
@@ -120,11 +142,11 @@ function_blocks:
             {{- end }}
             );
         in:
-            closed: LSC
-            opened: LSO
+            LSC: closed
+            LSO: opened
         out:
-            close: CLS_CTL
-            open: OPN_CTL
+            CLS_CTL: close
+            OPN_CTL: open
         omx:
             template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
             attributes:
@@ -147,46 +169,46 @@ function_blocks:
                 - TIMEOUT
                 - EXC_ERRORS
     VALVE_D:
-      st_template: |
-        {{.CdsType}}.{{.Tag}}(
-        {{- range $lhs, $rhs := .In }}
-            {{- if $rhs }}
-              {{ $lhs }} := {{ $rhs }},
+        st_template: |
+            {{.CdsType}}.{{.Tag}}(
+            {{- range $lhs, $rhs := .In }}
+                {{- if $rhs }}
+                  {{ $lhs }} := DI.{{ $rhs }}.q_xValue,
+                {{- end }}
             {{- end }}
-        {{- end }}
-        {{- range $lhs, $rhs := .Out }}
-            {{- if $rhs }}
-              {{ $lhs }} => {{ $rhs }},
+            {{- range $lhs, $rhs := .Out }}
+                {{- if $rhs }}
+                  {{ $lhs }} => DQ.{{ $rhs }}.i_xIn,
+                {{- end }}
             {{- end }}
-        {{- end }}
-        );
-      in:
-        closed: LSC
-        opened: LSO
-      out:
-        close: CLS_CTL
-        open: OPN_CTL
-      omx:
-        template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
-        attributes:
-          unit.System.Attributes.Description: .FB.Tag
-          unit.System.Attributes.TAGNAME: .FB.Equipment
-          unit.System.Attributes.Title: .FB.Tag
-      opc:
-        items:
-          - CONFIG.RUNTIME
-          - SET_MODE
-          - HMI_CMD
-          - DIAGN
-          - RQST_W
-          - CTL_W
-          - HMI_BLOCK
-          - BLOCK
-          - STATE
-          - PI.VALUE
-          - PI.QUALITY
-          - TIMEOUT
-          - EXC_ERRORS
+            );
+        in:
+            i_xLSC: closed
+            i_xLSO: opened
+        out:
+            q_xCmdClose: close
+            q_xCmdOpen: open
+        omx:
+            template: "<object name=\"{{.FB.Tag}}\" \n        base-type=\"unit.Types.{{.FB.CdsType}}.PLC_View\" \n        access-scope=\"global\" \n        aspect=\"unit.PsBase.Aspects.PLC_Aspect\" \n        access-level=\"public\" \n        uuid=\"{{.UUID}}\">\n</object>\n"
+            attributes:
+                unit.System.Attributes.Description: .FB.Tag
+                unit.System.Attributes.TAGNAME: .FB.Equipment
+                unit.System.Attributes.Title: .FB.Tag
+        opc:
+            items:
+                - CONFIG.RUNTIME
+                - SET_MODE
+                - HMI_CMD
+                - DIAGN
+                - RQST_W
+                - CTL_W
+                - HMI_BLOCK
+                - BLOCK
+                - STATE
+                - PI.VALUE
+                - PI.QUALITY
+                - TIMEOUT
+                - EXC_ERRORS
 systems:
     - RSU_7
     - PAZ_7
@@ -200,4 +222,8 @@ default_opc:
     nodeIdType: string
     binding: Introduced
 productsheet: Изделия
-address_template: '{{.Product.Tag}}_{{.Module}}.{{decrement .Channel}}'
+address_template:
+    AI: '{{.Product.Tag}}_{{.Module}}.CH{{.Channel}}'
+    AQ: '{{.Product.Tag}}_{{.Module}}.CH{{.Channel}}'
+    DI: '{{.Product.Tag}}_{{.Module}}.VALUE.{{decrement .Channel}}'
+    DQ: '{{.Product.Tag}}_{{.Module}}.VALUE.{{decrement .Channel}}'

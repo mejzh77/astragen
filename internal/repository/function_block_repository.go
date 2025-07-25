@@ -4,6 +4,7 @@ package repository
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/mejzh77/astragen/configs/config"
 	"github.com/mejzh77/astragen/pkg/models"
@@ -171,11 +172,18 @@ func (r *FunctionBlockRepository) SyncInputsFromSignals(signals []models.Signal)
 			if !exists {
 				continue
 			}
-			if _, isInput := fbConfig.In["address"]; !isInput {
+			var isInput bool
+			for _, v := range fbConfig.In {
+				if v == "address" {
+					isInput = true
+					break
+				}
+			}
+			if !isInput {
 				continue
 			}
 
-			fb := models.ParseFromSignal(signal, config.Cfg.AddressTemplate)
+			fb := models.ParseFromSignal(signal, config.Cfg.AddressTemplate[signal.SignalType])
 			if fb == nil {
 				continue
 			}
@@ -239,17 +247,29 @@ func (r *FunctionBlockRepository) SyncFBFromSignals(signals []models.Signal) err
 			if !exists {
 				continue
 			}
+			invertedIn := make(map[string]bool)
+			for _, v := range fbConfig.In {
+				parts := strings.Split(v, ".")
+				invertedIn[parts[0]] = true
+			}
 
+			invertedOut := make(map[string]bool)
+			for _, v := range fbConfig.Out {
+				parts := strings.Split(v, ".")
+				invertedOut[parts[0]] = true
+			}
+
+			// Теперь проверяем за O(1)
 			var direction string
-			if _, isInput := fbConfig.In[funcAttr]; isInput {
+			if invertedIn[funcAttr] {
 				direction = "input"
-			} else if _, isOutput := fbConfig.Out[funcAttr]; isOutput {
+			} else if invertedOut[funcAttr] {
 				direction = "output"
 			} else {
 				continue
 			}
 
-			fb, variable := models.ParseFBFromSignal(signal, direction, config.Cfg.AddressTemplate)
+			fb, variable := models.ParseFBFromSignal(signal, direction, config.Cfg.AddressTemplate[signal.SignalType])
 			if fb == nil {
 				continue
 			}

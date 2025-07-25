@@ -21,7 +21,7 @@ type DatabaseConfig struct {
 
 type SheetConfig struct {
 	SheetName  string      `yaml:"sheet_name"`
-	SignalType string      `yaml:"signal_type"` // "DI", "AI", "DO", "AO"
+	SignalType string      `yaml:"signal_type"` // "DI", "AI", "DQ", "AQ"
 	Model      interface{} `yaml:"-"`           // Указатель на модель (не для YAML)
 }
 
@@ -64,7 +64,7 @@ type AppConfig struct {
 	NodeSheet       string              `yaml:"nodesheet"`
 	DefaultOPCItem  OPCItemTemplate     `yaml:"default_opc"`
 	ProductSheet    string              `yaml:"productsheet"`
-	AddressTemplate string              `yaml:"address_template"`
+	AddressTemplate map[string]string   `yaml:"address_template"`
 }
 
 // LoadConfig загружает конфиг из файла
@@ -93,13 +93,13 @@ func LoadConfig(path string) *AppConfig {
 		},
 		{
 			SheetName:  "DQ",
-			SignalType: "DO",
-			Model:      &models.DO{},
+			SignalType: "DQ",
+			Model:      &models.DQ{},
 		},
 		{
 			SheetName:  "AQ",
-			SignalType: "AO",
-			Model:      &models.AO{},
+			SignalType: "AQ",
+			Model:      &models.AQ{},
 		},
 	}
 

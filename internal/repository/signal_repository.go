@@ -69,9 +69,9 @@ func getUpdateColumnsForSignalType(signalType string) []string {
 			"warning_low", "warning_high", "alarm_low", "alarm_high",
 			"format", "filter",
 		)
-	case "DO":
+	case "DQ":
 		return baseFields
-	case "AO":
+	case "AQ":
 		return append(baseFields,
 			"range_min", "range_max", "unit",
 		)
@@ -111,7 +111,7 @@ func getStructFields(signalType string) []string {
 				field.Name == "TON" || field.Name == "TOF" {
 				continue
 			}
-		case "DO":
+		case "DQ":
 			if field.Name == "Category" || field.Name == "Inversion" ||
 				field.Name == "TON" || field.Name == "TOF" ||
 				field.Name == "RangeMin" || field.Name == "RangeMax" ||
@@ -121,7 +121,7 @@ func getStructFields(signalType string) []string {
 				field.Name == "Format" || field.Name == "Filter" {
 				continue
 			}
-		case "AO":
+		case "AQ":
 			if field.Name == "Category" || field.Name == "Inversion" ||
 				field.Name == "TON" || field.Name == "TOF" ||
 				field.Name == "Sign" || field.Name == "WarningLow" ||
