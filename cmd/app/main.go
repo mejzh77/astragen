@@ -14,6 +14,10 @@ import (
 func main() {
 	// 1. Загрузка конфигурации
 	log.Println("Loading configuration...")
+	err := config.CreateDefaultConfigIfNotExist()
+	if err != nil {
+		log.Fatalf("Failed to create default config: %v", err)
+	}
 	config.Cfg = config.LoadConfig("config.yml")
 
 	// 2. Инициализация БД

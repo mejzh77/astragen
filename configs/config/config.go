@@ -67,6 +67,21 @@ type AppConfig struct {
 	AddressTemplate map[string]string   `yaml:"address_template"`
 }
 
+func CreateDefaultConfigIfNotExist() error {
+	if _, err := os.Stat("config.yaml"); os.IsNotExist(err) {
+		newCfg := AppConfig{}
+		data, err := yaml.Marshal(&newCfg)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile("config.yaml", data, 0644); err != nil {
+			return err
+		}
+		return nil
+	}
+	return nil
+}
+
 // LoadConfig загружает конфиг из файла
 func LoadConfig(path string) *AppConfig {
 	data, err := os.ReadFile(path)
