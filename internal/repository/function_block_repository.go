@@ -183,8 +183,8 @@ func (r *FunctionBlockRepository) SyncInputsFromSignals(signals []models.Signal)
 				continue
 			}
 
-			fb := models.ParseFromSignal(signal, config.Cfg.AddressTemplate[signal.SignalType])
-			if fb == nil {
+			fb, err := models.ParseFromSignal(signal, config.Cfg.AddressTemplate[signal.SignalType])
+			if err != nil {
 				continue
 			}
 
@@ -195,7 +195,7 @@ func (r *FunctionBlockRepository) SyncInputsFromSignals(signals []models.Signal)
 			} else {
 				if err := tx.Clauses(clause.OnConflict{
 					Columns:   []clause.Column{{Name: "tag"}},
-					DoUpdates: clause.AssignmentColumns([]string{"cds_type", "system_id", "node_id", "updated_at"}),
+					DoUpdates: clause.AssignmentColumns([]string{"cds_type", "system_id", "node_id", "updated_at", "primary"}),
 				}).Create(fb).Error; err != nil {
 					return fmt.Errorf("failed to upsert FB %s: %w", fb.Tag, err)
 				}
@@ -269,8 +269,9 @@ func (r *FunctionBlockRepository) SyncFBFromSignals(signals []models.Signal) err
 				continue
 			}
 
-			fb, variable := models.ParseFBFromSignal(signal, direction, config.Cfg.AddressTemplate[signal.SignalType])
-			if fb == nil {
+			fb, variable, err := models.ParseFBFromSignal(signal, direction, config.Cfg.AddressTemplate[signal.SignalType])
+			if err != nil {
+				fmt.Printf("failed to parse FB %s: %v", signal.Tag, err)
 				continue
 			}
 
@@ -372,9 +373,50 @@ func (r *FunctionBlockRepository) GenerateFBContent(fb *models.FunctionBlock, fb
 	return nil
 }
 
+type SignalWithFB struct {
+	Signal models.Signal
+	FB     models.FunctionBlock `gorm:"embedded"`
+}
+
+func (r *FunctionBlockRepository) UpdateAddresses() error {
+	var signals []SignalWithFB
+	result := r.db.Table("signals").
+		Select("signals.*, fb.*").
+		Joins("JOIN fb_variables v ON v.signal_tag = signals.tag").
+		Joins("JOIN function_blocks fb ON v.fb_id = fb.id").
+		Where("fb.primary = ?", true).
+		Find(&signals)
+	if result.Error != nil {
+		return fmt.Errorf("ошибка получения сигналов: %v", result.Error)
+	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, s := range signals {
+			newAddress, err := models.UpdateAddress(s.Signal, config.Cfg.AddressTemplate[s.Signal.SignalType])
+			if err != nil {
+				// Можно добавить логирование и продолжить
+				log.Printf("Ошибка обновления адреса для сигнала %s: %v", s.Signal.Tag, err)
+				continue
+			}
+
+			// 3. Обновляем только primary = true блоки
+			result := tx.Model(&models.FunctionBlock{}).
+				Where("id = ? AND primary = ?", s.FB.ID, true).
+				Update("address", newAddress)
+
+			if result.Error != nil {
+				return fmt.Errorf("ошибка обновления FB %d: %v", s.FB.ID, result.Error)
+			}
+		}
+		return nil
+	})
+}
+
 // RegenerateAllImportFiles перегенерирует ST, OMX и OPC для всех функциональных блоков
 func (r *FunctionBlockRepository) RegenerateAllImportFiles() (map[string]map[string]string, error) {
 	// Получаем все функциональные блоки с переменными
+	if err := r.UpdateAddresses(); err != nil {
+		return nil, fmt.Errorf("failed to get all FBs: %w", err)
+	}
 	var fbs []*models.FunctionBlock
 	if err := r.db.Preload("Variables").Find(&fbs).Error; err != nil {
 		return nil, fmt.Errorf("failed to get all FBs: %w", err)

@@ -1,10 +1,13 @@
 package api
 
 import (
+	"github.com/foolin/goview"
+	"github.com/foolin/goview/supports/ginview"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/mejzh77/astragen/configs/config"
 	"github.com/mejzh77/astragen/internal/sync"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
@@ -23,29 +26,100 @@ type WebService struct {
 	syncService  *sync.SyncService
 	clients      map[*websocket.Conn]bool
 	clientsMutex stdsync.Mutex
+	router       *gin.Engine
 }
 
 func NewWebService(syncService *sync.SyncService) *WebService {
 	return &WebService{
 		syncService: syncService,
 		clients:     make(map[*websocket.Conn]bool),
+		router:      gin.Default(),
 	}
 }
 
-func (s *WebService) RegisterRoutes(r *gin.Engine) {
-	r.GET("/", s.IndexPage)
-	r.GET("/tree", s.TreePage)
-	r.POST("/api/sync", s.SyncData)
-	r.GET("/api/tree-data", s.GetTreeData)
-	r.GET("/api/details", s.getItemDetails)
-	r.GET("/api/config", s.GetConfig)
-	r.POST("/api/config", s.UpdateConfig)
-	r.GET("/config", s.ConfigPage)
-	r.GET("/ws", s.handleWebSocket)
-	r.GET("/generate", s.GenerateImportPage)
-	r.POST("/api/generate-import", s.GenerateImportFile)
-	r.POST("/api/regenerate-import-files", s.RegenerateAllImportFiles)
-	r.GET("/api/nodes", s.GetNodesBySystem)
+//	func (s *WebService) SetupTemplates() {
+//		tpl := template.New("base").Funcs(template.FuncMap{
+//			"hasChildren": func(item interface{}) bool {
+//				m, ok := item.(map[string]interface{})
+//				if !ok {
+//					return false
+//				}
+//				return m["systems"] != nil || m["nodes"] != nil ||
+//					m["products"] != nil || m["functionBlocks"] != nil
+//			},
+//		})
+//
+//		// Сначала layout, потом остальные
+//		files := []string{
+//			"templates/layout.html",
+//			"templates/index.html",
+//			"templates/config.html",
+//			"templates/generate.html",
+//			"templates/tree.html",
+//		}
+//
+//		tpl = template.Must(tpl.ParseFiles(files...))
+//
+//		// Логгируем загруженные шаблоны
+//		for _, t := range tpl.Templates() {
+//			log.Printf("Template: %s (defined: %v)", t.Name(), t.DefinedTemplates())
+//		}
+//
+//		s.router.HTMLRender = &TemplRender{Template: tpl}
+//	}
+//
+//// Кастомный рендерер для Gin
+//type TemplRender struct {
+//	Template *template.Template
+//}
+//
+//func (t *TemplRender) Instance(name string, data interface{}) render.Render {
+//	log.Printf("Rendering template: %s (defined: %s)", name, t.Template.DefinedTemplates())
+//	return render.HTML{
+//		Template: t.Template,
+//		Name:     name,
+//		Data:     data,
+//	}
+//}
+
+func (s *WebService) Run(addr string) {
+	s.router.HTMLRender = ginview.New(goview.Config{
+		Root:      "templates",
+		Extension: ".html",
+		Master:    "layout",
+		Partials:  []string{},
+		Funcs: template.FuncMap{
+			"hasChildren": func(item interface{}) bool {
+				m, ok := item.(map[string]interface{})
+				if !ok {
+					return false
+				}
+				return m["systems"] != nil || m["nodes"] != nil ||
+					m["products"] != nil || m["functionBlocks"] != nil
+			},
+		},
+		DisableCache: true,
+	})
+	s.router.Static("/static", "./static")
+	err := s.router.Run(addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+func (s *WebService) RegisterRoutes() {
+	s.router.GET("/", s.IndexPage)
+	s.router.GET("/tree", s.TreePage)
+	s.router.POST("/api/sync", s.SyncData)
+	s.router.GET("/api/tree-data", s.GetTreeData)
+	s.router.GET("/api/details", s.getItemDetails)
+	s.router.GET("/api/config", s.GetConfig)
+	s.router.POST("/api/config", s.UpdateConfig)
+	s.router.GET("/config", s.ConfigPage)
+	s.router.GET("/ws", s.handleWebSocket)
+	s.router.GET("/generate", s.GenerateImportPage)
+	s.router.POST("/api/generate-import", s.GenerateImportFile)
+	s.router.POST("/api/regenerate-import-files", s.RegenerateAllImportFiles)
+	s.router.GET("/api/nodes", s.GetNodesBySystem)
 
 }
 
@@ -78,12 +152,12 @@ func (s *WebService) handleWebSocket(c *gin.Context) {
 	}
 }
 func (s *WebService) IndexPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"title": "ASTRA Dashboard",
+	c.HTML(http.StatusOK, "index", gin.H{
+		"title": "ПТК AstraRegul",
 	})
 }
 func (s *WebService) ConfigPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "config.html", gin.H{
+	c.HTML(http.StatusOK, "config", gin.H{
 		"title": "Редактор конфигурации",
 	})
 }
@@ -91,7 +165,7 @@ func (s *WebService) GenerateImportPage(c *gin.Context) {
 	systems, _ := s.syncService.GetAllSystems()
 	cdsTypes, _ := s.syncService.GetAllCDSTypes()
 
-	c.HTML(http.StatusOK, "generate.html", gin.H{
+	c.HTML(http.StatusOK, "generate", gin.H{
 		"title":    "Generate Import Files",
 		"systems":  systems,
 		"cdsTypes": cdsTypes,
@@ -209,13 +283,13 @@ func (s *WebService) UpdateConfig(c *gin.Context) {
 func (s *WebService) TreePage(c *gin.Context) {
 	treeData, err := s.syncService.GetTreeData()
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "error", gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "tree.html", gin.H{
+	c.HTML(http.StatusOK, "tree", gin.H{
 		"title": "Project Structure",
 		"tree":  treeData,
 	})

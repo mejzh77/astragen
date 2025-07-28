@@ -15,6 +15,7 @@ replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
 replace github.com/mejzh77/astragen/internal/sync => ../sync
 
 require (
+	github.com/foolin/goview v0.3.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000

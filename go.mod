@@ -3,7 +3,7 @@ module github.com/mejzh77/astragen
 go 1.24.4
 
 require (
-	github.com/gin-gonic/gin v1.10.1
+	github.com/gin-gonic/gin v1.10.1 // indirect
 	gorm.io/gorm v1.30.0
 )
 
@@ -24,6 +24,7 @@ require (
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/foolin/goview v0.3.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect

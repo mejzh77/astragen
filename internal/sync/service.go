@@ -3,6 +3,7 @@ package sync
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -39,7 +40,27 @@ func NewSyncService(
 	}
 }
 
+func (s *SyncService) SetSheetService(sheetsService *gsheets.Service) {
+
+	s.gsheets = sheetsService
+}
+
 func (s *SyncService) RunFullSync(ctx context.Context) error {
+	log.Println("Initializing services...")
+	creds, err := os.ReadFile("credentials.json")
+	if err != nil {
+		log.Fatalf("Failed to read credentials file: %v", err)
+	}
+
+	sheetsService, err := gsheets.NewService(ctx, creds)
+	if err != nil {
+		log.Fatalf("Failed to create Google Sheets service: %v", err)
+	}
+	// 4. Полная синхронизация с логированием
+	log.Println("Starting full sync process...")
+
+	s.SetSheetService(sheetsService)
+	// 4.2. Синхронизация сигналов
 	if err := s.SyncProjectsAndSystems(); err != nil {
 		return fmt.Errorf("failed to sync projects and systems: %w", err)
 	}
@@ -152,7 +173,14 @@ func (s *SyncService) UpdateConfig(updates map[string]interface{}) error {
 			}
 		}
 	}
-
+	if addresses, ok := updates["signal_addresses"].(map[string]interface{}); ok {
+		cfg.AddressTemplate = make(map[string]string)
+		for key, addr := range addresses {
+			if s, ok := addr.(string); ok {
+				cfg.AddressTemplate[key] = s
+			}
+		}
+	}
 	// Инициализация DB, если она nil
 	if cfg.DB == nil {
 		cfg.DB = &config.DatabaseConfig{

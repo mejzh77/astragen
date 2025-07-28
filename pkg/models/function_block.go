@@ -3,7 +3,6 @@ package models
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"text/template"
@@ -273,13 +272,21 @@ func decrementString(channel string) (string, error) {
 	}
 	return strconv.Itoa(num - 1), nil
 }
+func formatNumber(input string, length int) string {
+	if len(input) >= length {
+		return input
+	}
+
+	// Дополняем нулями слева
+	return strings.Repeat("0", length-len(input)) + input
+}
 
 // ParseFBFromSignal создает/обновляет FunctionBlock из сигнала
-func ParseFBFromSignal(signal Signal, direction string, addressTmpl string) (*FunctionBlock, *FBVariable) {
+func ParseFBFromSignal(signal Signal, direction string, addressTmpl string) (*FunctionBlock, *FBVariable, error) {
 	fbTag, funcAttr, _ := ParseFBInfo(signal.Tag)
-	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString})
+	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString, "format_number": formatNumber})
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, fmt.Errorf("ошибка выполнения шаблона для сигнала %s: %v", signal.Tag, err)
 	}
 	fb := &FunctionBlock{
 		Tag:       fbTag,
@@ -298,13 +305,22 @@ func ParseFBFromSignal(signal Signal, direction string, addressTmpl string) (*Fu
 		Direction: direction,
 	}
 
-	return fb, variable
+	return fb, variable, nil
 }
 
-func ParseFromSignal(signal Signal, addressTmpl string) *FunctionBlock {
-	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString})
+func UpdateAddress(signal Signal, addressTmpl string) (string, error) {
+	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString, "format_number": formatNumber})
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to parse address %s: %v", signal.Tag, err))
+		return signal.Address, fmt.Errorf("ошибка выполнения шаблона для сигнала %s: %v", signal.Tag, err)
+	} else {
+		return addr, nil
+	}
+}
+
+func ParseFromSignal(signal Signal, addressTmpl string) (*FunctionBlock, error) {
+	addr, err := executeTemplate(addressTmpl, signal, template.FuncMap{"decrement": decrementString, "format_number": formatNumber})
+	if err != nil {
+		return nil, fmt.Errorf("ошибка выполнения шаблона для сигнала %s: %v", signal.Tag, err)
 	}
 	fb := &FunctionBlock{
 		Tag:       signal.Tag,
@@ -317,5 +333,5 @@ func ParseFromSignal(signal Signal, addressTmpl string) *FunctionBlock {
 		Address:   addr,
 	}
 
-	return fb
+	return fb, nil
 }

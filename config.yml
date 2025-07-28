@@ -1,5 +1,5 @@
 db:
-    host: 192.168.88.55
+    host: 192.168.88.78
     port: "5432"
     user: user
     password: advengauser
@@ -223,7 +223,7 @@ default_opc:
     binding: Introduced
 productsheet: Изделия
 address_template:
-    AI: '{{.Product.Tag}}_{{.Module}}.CH{{.Channel}}'
-    AQ: '{{.Product.Tag}}_{{.Module}}.CH{{.Channel}}'
+    AI: '{{.Product.Tag}}_{{.Module}}.CH{{format_number .Channel 2}}'
+    AQ: '{{.Product.Tag}}_{{.Module}}.CH{{format_number .Channel 2}}'
     DI: '{{.Product.Tag}}_{{.Module}}.VALUE.{{decrement .Channel}}'
     DQ: '{{.Product.Tag}}_{{.Module}}.VALUE.{{decrement .Channel}}'
