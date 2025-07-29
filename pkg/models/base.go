@@ -69,3 +69,11 @@ type SheetProduct struct {
 	Tag      string `gsheets:"tag"`
 	// Другие поля по необходимости
 }
+
+type SheetFB struct {
+	System      string `gsheets:"system"`
+	CdsType     string `gsheets:"cds_type"`
+	Tag         string `gsheets:"tag"`
+	Name        string `gsheets:"name"`
+	Description string `gsheets:"description"`
+}

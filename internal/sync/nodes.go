@@ -52,7 +52,7 @@ func (s *SyncService) syncNodes(nodes []models.Node) error {
 func (s *SyncService) loadNodesFromSheets(ctx context.Context) ([]models.Node, error) {
 	var sheetNodes []models.SheetNode
 
-	if err := s.gsheets.Load(config.Cfg.SpreadsheetID, config.Cfg.NodeSheet, &sheetNodes); err != nil {
+	if err := s.gsRead.Load(config.Cfg.SpreadsheetID, config.Cfg.NodeSheet, &sheetNodes); err != nil {
 		return nil, fmt.Errorf("failed to load nodes: %w", err)
 	}
 

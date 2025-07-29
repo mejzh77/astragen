@@ -3,6 +3,7 @@ package sync
 import (
 	"context"
 	"fmt"
+	"github.com/mejzh77/astragen/pkg/models"
 	"log"
 	"os"
 	"reflect"
@@ -16,7 +17,8 @@ import (
 )
 
 type SyncService struct {
-	gsheets     *gsheets.Service
+	gsRead      *gsheets.Service
+	gsWrite     *gsheets.WriteService
 	projectRepo *repository.ProjectRepository
 	signalRepo  *repository.SignalRepository
 	fbRepo      *repository.FunctionBlockRepository
@@ -30,7 +32,7 @@ func NewSyncService(
 	db *gorm.DB,
 ) *SyncService {
 	return &SyncService{
-		gsheets:     gsheets,
+		gsRead:      gsheets,
 		projectRepo: repository.NewProjectRepository(db),
 		signalRepo:  repository.NewSignalRepository(db),
 		fbRepo:      repository.NewFunctionBlockRepository(db),
@@ -40,9 +42,12 @@ func NewSyncService(
 	}
 }
 
-func (s *SyncService) SetSheetService(sheetsService *gsheets.Service) {
+func (s *SyncService) SetWriteService(sheetsService *gsheets.WriteService) {
+	s.gsWrite = sheetsService
+}
 
-	s.gsheets = sheetsService
+func (s *SyncService) SetReadService(sheetsService *gsheets.Service) {
+	s.gsRead = sheetsService
 }
 
 func (s *SyncService) RunFullSync(ctx context.Context) error {
@@ -59,7 +64,11 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 	// 4. Полная синхронизация с логированием
 	log.Println("Starting full sync process...")
 
-	s.SetSheetService(sheetsService)
+	s.SetReadService(sheetsService)
+	writeService, err := gsheets.NewWriteService(ctx, creds)
+	if err == nil {
+		s.SetWriteService(writeService)
+	}
 	// 4.2. Синхронизация сигналов
 	if err := s.SyncProjectsAndSystems(); err != nil {
 		return fmt.Errorf("failed to sync projects and systems: %w", err)
@@ -85,8 +94,120 @@ func (s *SyncService) RunFullSync(ctx context.Context) error {
 	if err := s.LinkFunctionBlocksToNodes(); err != nil {
 		return fmt.Errorf("failed to link function blocks: %w", err)
 	}
+	if err := s.SyncFunctionBlocksWithSheet(config.Cfg.SpreadsheetID, "FB"); err != nil {
+		return fmt.Errorf("failed to sync function blocks: %w", err)
+	}
+	return nil
+}
+
+// SyncFunctionBlocksWithSheet синхронизирует функциональные блоки между Google Sheets и базой данных
+func (s *SyncService) SyncFunctionBlocksWithSheet(spreadsheetID, sheetName string) error {
+	// 1. Получаем функциональные блоки из Google Sheets
+	var sheetFBs []models.SheetFB
+	err := s.gsRead.Load(spreadsheetID, sheetName, &sheetFBs)
+	if err != nil {
+		return fmt.Errorf("failed to get function blocks from sheet: %w", err)
+	}
+	var dbFBs []models.FunctionBlock
+	// 2. Получаем функциональные блоки из базы данных
+	err = s.fbRepo.GetAll(&dbFBs)
+	if err != nil {
+		return fmt.Errorf("failed to get function blocks from db: %w", err)
+	}
+
+	// 3. Создаем карты для быстрого поиска
+	sheetFBMap := make(map[string]models.SheetFB)
+	for _, fb := range sheetFBs {
+		sheetFBMap[fb.Tag] = fb
+	}
+
+	dbFBMap := make(map[string]models.FunctionBlock)
+	for _, fb := range dbFBs {
+		dbFBMap[fb.Tag] = fb
+	}
+
+	// 4. Синхронизация: Sheet -> DB
+	var sheetToDBUpdates []models.SheetFB
+	for tag, sheetFB := range sheetFBMap {
+		if dbFB, exists := dbFBMap[tag]; exists {
+			// Обновляем существующую запись в БД, если есть изменения
+			if s.fbNeedsUpdate(dbFB, sheetFB) {
+				sheetToDBUpdates = append(sheetToDBUpdates, sheetFB)
+			}
+		} else {
+			// Добавляем новую запись в БД
+			sheetToDBUpdates = append(sheetToDBUpdates, sheetFB)
+		}
+	}
+
+	if len(sheetToDBUpdates) > 0 {
+		if err := s.updateDBFunctionBlocks(sheetToDBUpdates); err != nil {
+			return fmt.Errorf("failed to update db function blocks: %w", err)
+		}
+		log.Printf("Updated %d function blocks in DB from sheet", len(sheetToDBUpdates))
+	}
+
+	// 5. Синхронизация: DB -> Sheet (полная перезапись листа)
+	if len(dbFBMap) > 0 {
+		// Преобразуем все функциональные блоки в формат SheetFB
+		var allSheetFBs []models.SheetFB
+		for _, fb := range dbFBMap {
+			if fb.Primary {
+				continue
+			}
+			var sys, descr, name string
+			if fb.System != nil {
+				sys = fb.System.Name
+			} else {
+				sys = "--"
+			}
+			if fb.Name != sheetFBMap[fb.Tag].Name {
+				name = sheetFBMap[fb.Tag].Name
+			}
+			if fb.Description != sheetFBMap[fb.Tag].Description {
+				descr = sheetFBMap[fb.Tag].Description
+			}
+			allSheetFBs = append(allSheetFBs, models.SheetFB{
+				Name:        name,
+				Tag:         fb.Tag,
+				Description: descr,
+				CdsType:     fb.CdsType,
+				System:      sys,
+			})
+		}
+
+		// Используем метод Save для полной перезаписи листа
+		if err := s.gsWrite.Save(spreadsheetID, sheetName, allSheetFBs); err != nil {
+			return fmt.Errorf("failed to save function blocks to sheet: %w", err)
+		}
+		log.Printf("Saved %d function blocks to sheet", len(allSheetFBs))
+	}
 
 	return nil
+}
+
+// updateDBFunctionBlocks обновляет функциональные блоки в БД
+func (s *SyncService) updateDBFunctionBlocks(sheetFBs []models.SheetFB) error {
+	for _, sheetFB := range sheetFBs {
+		if sheetFB.Name == "" {
+			continue
+		}
+		fb := models.FunctionBlock{
+			Tag:         sheetFB.Tag,
+			Name:        sheetFB.Name,
+			Description: sheetFB.Description,
+		}
+
+		if err := s.fbRepo.Upsert(fb); err != nil {
+			return fmt.Errorf("failed to upsert function block %s: %w", sheetFB.Tag, err)
+		}
+	}
+	return nil
+}
+
+// fbNeedsUpdate проверяет, нужно ли обновлять запись в БД
+func (s *SyncService) fbNeedsUpdate(dbFB models.FunctionBlock, sheetFB models.SheetFB) bool {
+	return dbFB.Name != sheetFB.Name || dbFB.Description != sheetFB.Description
 }
 
 // Добавьте эти методы в SyncService

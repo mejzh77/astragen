@@ -19,6 +19,11 @@ type Service struct {
 	client *sheets.Service
 }
 
+// WriteService предоставляет методы для записи данных в Google Sheets
+type WriteService struct {
+	client *sheets.Service
+}
+
 func NewService(ctx context.Context, credentialsJSON []byte) (*Service, error) {
 	client, err := google.JWTConfigFromJSON(
 		credentialsJSON,
@@ -34,6 +39,25 @@ func NewService(ctx context.Context, credentialsJSON []byte) (*Service, error) {
 	}
 
 	return &Service{client: srv}, nil
+}
+
+// NewWriteService создает новый сервис для записи с указанными учетными данными
+func NewWriteService(ctx context.Context, credentialsJSON []byte) (*WriteService, error) {
+	// Для записи нам нужен более широкий scope
+	client, err := google.JWTConfigFromJSON(
+		credentialsJSON,
+		sheets.SpreadsheetsScope, // Заметьте, что здесь используется полный доступ
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create JWT config: %w", err)
+	}
+
+	srv, err := sheets.NewService(ctx, option.WithHTTPClient(client.Client(ctx)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create sheets service: %w", err)
+	}
+
+	return &WriteService{client: srv}, nil
 }
 
 func (s *Service) ReadSheet(spreadsheetID, readRange string) ([][]interface{}, error) {
@@ -100,7 +124,7 @@ func calculateColumns(typ reflect.Type) int {
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 
-		// Пропускаем непэкспортируемые поля
+		// Пропускаем неэкспортируемые поля
 		if field.PkgPath != "" {
 			continue
 		}
@@ -126,26 +150,88 @@ func calculateColumns(typ reflect.Type) int {
 	return count
 }
 
-// В internal/gsheets/service.go
+// WriteSheet записывает данные в указанный лист Google Sheets
+func (s *WriteService) WriteSheet(spreadsheetID, sheetName string, data [][]interface{}) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	// Определяем диапазон для записи (всю таблицу)
+	rangeData := fmt.Sprintf("%s!A1:%s%d",
+		sheetName,
+		columnToLetter(len(data[0])),
+		len(data))
+
+	valueRange := &sheets.ValueRange{
+		Values: data,
+	}
+
+	_, err := s.client.Spreadsheets.Values.Update(spreadsheetID, rangeData, valueRange).
+		ValueInputOption("RAW").
+		Do()
+	if err != nil {
+		return fmt.Errorf("failed to write to sheet: %w", err)
+	}
+
+	return nil
+}
+
+// AppendSheet добавляет данные в конец указанного листа
+func (s *WriteService) AppendSheet(spreadsheetID, sheetName string, data [][]interface{}) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	rangeData := fmt.Sprintf("%s!A:A", sheetName) // Определяем только колонку для append
+
+	valueRange := &sheets.ValueRange{
+		Values: data,
+	}
+
+	_, err := s.client.Spreadsheets.Values.Append(spreadsheetID, rangeData, valueRange).
+		ValueInputOption("RAW").
+		InsertDataOption("INSERT_ROWS").
+		Do()
+	if err != nil {
+		return fmt.Errorf("failed to append to sheet: %w", err)
+	}
+
+	return nil
+}
+
+// ClearSheet очищает указанный лист
+func (s *WriteService) ClearSheet(spreadsheetID, sheetName string) error {
+	rangeData := fmt.Sprintf("%s!A:ZZ", sheetName) // Очищаем весь лист
+	fmt.Println(s)
+	_, err := s.client.Spreadsheets.Values.Clear(spreadsheetID, rangeData, &sheets.ClearValuesRequest{}).Do()
+	if err != nil {
+		return fmt.Errorf("failed to clear sheet: %w", err)
+	}
+
+	return nil
+}
+
+func (s *WriteService) Save(spreadsheetID string, sheetName string, data interface{}) error {
+	// Преобразование в формат для Google Sheets
+	toSpreadsheet, err := Marshal(data)
+	if err != nil {
+		return fmt.Errorf("failed to marshal data: %v", err)
+	}
+
+	// Очистка листа перед записью (опционально)
+	if err := s.ClearSheet(spreadsheetID, sheetName); err != nil {
+		return fmt.Errorf("warning: failed to clear sheet: %v", err)
+	}
+
+	// Запись данных
+	if err := s.WriteSheet(spreadsheetID, sheetName, toSpreadsheet); err != nil {
+		return fmt.Errorf("failed to write to sheet: %v", err)
+	}
+	return nil
+}
+
+// Load реализует функцию чтения из гугл-таблицы
 func (s *Service) Load(spreadsheetID string, sheetName string, dest interface{}) error {
-	//val := reflect.ValueOf(dest)
-	//if val.Kind() != reflect.Ptr || val.IsNil() {
-	//return &InvalidUnmarshalError{Type: reflect.TypeOf(dest)}
-	//}
-
-	//// Получаем тип элементов слайса
-	//sliceVal := val.Elem()
-	//if sliceVal.Kind() != reflect.Slice {
-	//return errors.New("gsheets: target must be a slice")
-	//}
-
-	//elemType := sliceVal.Type().Elem()
-	//if elemType.Kind() != reflect.Struct {
-	//return errors.New("gsheets: slice elements must be structs")
-	//}
-	//// Создаем экземпляр элемента для GetRange
-	//elem := reflect.New(elemType).Elem().Interface()
-	// 1. Определяем диапазон для чтения
 	// 1. Получаем ВСЕ заголовки из таблицы
 	allHeaders, err := getAllHeaders(s.client, spreadsheetID, sheetName)
 	if err != nil {
@@ -176,6 +262,7 @@ func (s *Service) Load(spreadsheetID string, sheetName string, dest interface{})
 
 	return nil
 }
+
 func getNeededColumns(dest interface{}) map[string]bool {
 	needed := make(map[string]bool)
 	val := reflect.ValueOf(dest).Elem()
@@ -196,7 +283,7 @@ func buildRange(sheetName string, neededColumns map[string]bool, headerMap map[s
 	var columns []string
 	for colName := range neededColumns {
 		if idx, exists := headerMap[colName]; exists {
-			colLetter := toColumnLetter(idx + 1) // +1 т.к. индексы с 0
+			colLetter := columnToLetter(idx + 1) // +1 т.к. индексы с 0
 			columns = append(columns, colLetter)
 		}
 	}
@@ -209,23 +296,13 @@ func buildRange(sheetName string, neededColumns map[string]bool, headerMap map[s
 	return fmt.Sprintf("%s!%s:%s", sheetName, columns[0], columns[len(columns)-1])
 }
 
-func toColumnLetter(colNum int) string {
-	letter := ""
-	for colNum > 0 {
-		colNum--
-		letter = string(rune('A'+(colNum%26))) + letter
-		colNum /= 26
-	}
-	return letter
-}
-
 // columnToLetter преобразует номер колонки в буквенное обозначение (1 -> A, 26 -> Z, 27 -> AA)
 func columnToLetter(col int) string {
 	letter := ""
 	for col > 0 {
 		col--
 		letter = string(rune('A'+(col%26))) + letter
-		col = col / 26
+		col /= 26
 	}
 	return letter
 }

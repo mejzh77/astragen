@@ -18,7 +18,7 @@ func (s *SyncService) GetFunctionBlockDetails(id string) (gin.H, error) {
 
 func (s *SyncService) LinkFunctionBlocksToNodes() error {
 	var fbs []models.FunctionBlock
-	if err := s.fbRepo.GetAllWithNodes(&fbs); err != nil {
+	if err := s.fbRepo.GetAll(&fbs); err != nil {
 		return fmt.Errorf("failed to get function blocks: %w", err)
 	}
 	for _, fb := range fbs {
@@ -51,6 +51,7 @@ func (s *SyncService) SyncFunctionBlocks(signals []models.Signal) error {
 	}
 	return nil
 }
+
 func (s *SyncService) GetFilteredFunctionBlocks(system, cdsType, node string) ([]*models.FunctionBlock, error) {
 	return s.fbRepo.GetFiltered(system, cdsType, node)
 }

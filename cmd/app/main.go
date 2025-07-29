@@ -14,7 +14,7 @@ import (
 func main() {
 	// 1. Загрузка конфигурации
 	log.Println("Loading configuration...")
-	err := config.CreateDefaultConfigIfNotExist()
+	err := config.CreateDefaultConfigIfNotExist("config.yml")
 	if err != nil {
 		log.Fatalf("Failed to create default config: %v", err)
 	}

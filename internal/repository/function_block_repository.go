@@ -16,6 +16,14 @@ type FunctionBlockRepository struct {
 	db *gorm.DB
 }
 
+// BulkUpsert создает или обновляет узлы пачкой
+func (r *FunctionBlockRepository) Upsert(fb models.FunctionBlock) error {
+	return r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "tag"}},
+		DoUpdates: clause.AssignmentColumns([]string{"description", "name"}),
+	}).Create(&fb).Error
+}
+
 func NewFunctionBlockRepository(db *gorm.DB) *FunctionBlockRepository {
 	if err := createFunctionBlocksTables(db); err != nil {
 		log.Fatalf("Failed to create function blocks tables: %v", err)
@@ -77,9 +85,11 @@ func (r *FunctionBlockRepository) GetFBWithVariables(tag string) (*models.Functi
 	}
 	return &fb, nil
 }
-func (r *FunctionBlockRepository) GetAllWithNodes(fbs *[]models.FunctionBlock) error {
-	return r.db.Find(fbs).Error
+
+func (r *FunctionBlockRepository) GetAll(fbs *[]models.FunctionBlock) error {
+	return r.db.Preload("System").Find(fbs).Error
 }
+
 func (r *FunctionBlockRepository) DebugCheckFunctionBlocks() {
 	var count int64
 	r.db.Model(&models.FunctionBlock{}).Count(&count)
@@ -109,7 +119,7 @@ func (r *FunctionBlockRepository) GetFiltered(system, cdsType, node string) ([]*
 			Where("nodes.name = ?", node)
 	}
 	var fbs []*models.FunctionBlock
-	if err := query.Find(&fbs).Error; err != nil {
+	if err := query.Order("node_id, substring(address from '^(.*\\.)'), cast(regexp_replace(substring(address from '\\.[^\\d.]*\\d+$'), '^\\.(CH0|CH)*', '', 'g') as integer)").Find(&fbs).Error; err != nil {
 		return nil, fmt.Errorf("failed to get filtered FBs: %w", err)
 	}
 
@@ -374,7 +384,7 @@ func (r *FunctionBlockRepository) GenerateFBContent(fb *models.FunctionBlock, fb
 }
 
 type SignalWithFB struct {
-	Signal models.Signal
+	Signal models.Signal        `gorm:"embedded"`
 	FB     models.FunctionBlock `gorm:"embedded"`
 }
 

@@ -2,21 +2,25 @@ module github.com/mejzh77/astragen/internal/sync
 
 go 1.24.4
 
-replace github.com/mejzh77/astragen/internal/gsheets => ../gsheets
-
-replace github.com/mejzh77/astragen/configs/config => ../../configs/config
-
-replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
-
-replace github.com/mejzh77/astragen/internal/repository => ../repository
+//replace github.com/mejzh77/astragen/internal/gsheets => ../gsheets
+//
+//replace github.com/mejzh77/astragen/configs/config => ../../configs/config
+//
+//replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
+//
+//replace github.com/mejzh77/astragen/internal/repository => ../repository
 
 require (
 	github.com/gin-gonic/gin v1.10.1
-	github.com/mejzh77/astragen/configs/config v0.0.0-00010101000000-000000000000
-	github.com/mejzh77/astragen/internal/gsheets v0.0.0-00010101000000-000000000000
-	github.com/mejzh77/astragen/internal/repository v0.0.0-00010101000000-000000000000
-	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000
 	gorm.io/gorm v1.30.0
+)
+
+require (
+	github.com/mejzh77/astragen/configs/config v0.0.0-20250728092642-dc3364e323eb
+	github.com/mejzh77/astragen/internal/gsheets v0.0.0-20250728092642-dc3364e323eb
+	github.com/mejzh77/astragen/internal/repository v0.0.0-20250728092642-dc3364e323eb
+	github.com/mejzh77/astragen/pkg/models v0.0.0-20250728092642-dc3364e323eb
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -66,5 +70,4 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -29,12 +29,17 @@ type FunctionBlock struct {
 	Address     string       `gorm:"size:50"`
 	Node        *Node        `gorm:"foreignKey:NodeID"`
 	Variables   []FBVariable `gorm:"foreignKey:FBID"`
+	Description string       `gorm:"type:TEXT"`
+	Name        string       `gorm:"size:255"`
+	Comment     string       `gorm:"type:TEXT"`
 }
 
 type FBCallParams struct {
 	Tag     string
 	CdsType string
 	Address string
+	Comment string
+	Node    string
 	In      IOPair
 	Out     IOPair
 }
@@ -89,9 +94,9 @@ func ProcessIOPair(pairIn, pairOut map[string]string, fb *FunctionBlock) (IOPair
 				parts := strings.Split(rhs, ".")
 				if v.FuncAttr == parts[0] {
 					if len(parts) > 1 {
-						inputs[lhs] = v.SignalTag + "." + parts[1]
+						inputs[lhs] = v.CdsType + "." + v.SignalTag + "." + parts[1]
 					} else {
-						inputs[lhs] = v.SignalTag
+						inputs[lhs] = v.CdsType + "." + v.SignalTag
 					}
 				}
 			}
@@ -103,9 +108,9 @@ func ProcessIOPair(pairIn, pairOut map[string]string, fb *FunctionBlock) (IOPair
 				parts := strings.Split(rhs, ".")
 				if v.FuncAttr == parts[0] {
 					if len(parts) > 1 {
-						outputs[lhs] = v.SignalTag + parts[1]
+						outputs[lhs] = v.CdsType + "." + v.SignalTag + parts[1]
 					} else {
-						outputs[lhs] = v.SignalTag
+						outputs[lhs] = v.CdsType + "." + v.SignalTag
 					}
 				}
 			}
@@ -116,11 +121,18 @@ func ProcessIOPair(pairIn, pairOut map[string]string, fb *FunctionBlock) (IOPair
 func (fb *FunctionBlock) GenerateSTCode(fbTemplate string, defaultInputs, defaultOutputs map[string]string) (string, error) {
 	// Разделяем переменные на входы и выходы
 	inputs, outputs := ProcessIOPair(defaultInputs, defaultOutputs, fb)
+
+	var nodeName string
+	if fb.Node != nil {
+		nodeName = fb.Node.Name
+	}
 	// Подготавливаем данные для шаблона
 	data := FBCallParams{
 		Tag:     fb.Tag,
 		CdsType: fb.CdsType,
 		Address: fb.Address,
+		Comment: fb.Comment,
+		Node:    nodeName,
 		In:      inputs,
 		Out:     outputs,
 	}
@@ -294,6 +306,7 @@ func ParseFBFromSignal(signal Signal, direction string, addressTmpl string) (*Fu
 		SystemID:  signal.SystemID,
 		CdsType:   signal.FB,
 		NodeID:    signal.NodeID,
+		NodeRef:   signal.NodeRef,
 		Equipment: signal.Equipment,
 	}
 
@@ -329,8 +342,12 @@ func ParseFromSignal(signal Signal, addressTmpl string) (*FunctionBlock, error) 
 		Primary:   true,
 		CdsType:   signal.FB,
 		NodeID:    signal.NodeID,
+		NodeRef:   signal.NodeRef,
 		Equipment: signal.Equipment,
 		Address:   addr,
+		Name:      signal.Name,
+		Comment: fmt.Sprintf("%s\n%s\nproduct: %s; crate: %s; module: %s; channel: %s",
+			signal.NodeRef, signal.Name, signal.ProductRef, signal.Crate, signal.Module, signal.Channel),
 	}
 
 	return fb, nil

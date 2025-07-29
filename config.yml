@@ -18,7 +18,9 @@ sheets:
       signal_type: AQ
 function_blocks:
     AI:
-        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := {{.Address}});'
+        st_template: |-
+            (*{{.Comment}}*)
+            {{.CdsType}}.{{.Tag}}({{.In.address}} := {{.Address}});
         in:
             i_rIn: address
         out: {}
@@ -28,7 +30,9 @@ function_blocks:
         opc:
             items: []
     AQ:
-        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});'
+        st_template: |-
+            (*{{.Comment}}*)
+            {{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});
         in:
             i_rIn: address
         out: {}
@@ -38,7 +42,9 @@ function_blocks:
         opc:
             items: []
     DI:
-        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});'
+        st_template: |-
+            (*{{.Comment}}*)
+            {{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});
         in:
             i_xIn: address
         out: {}
@@ -48,7 +54,9 @@ function_blocks:
         opc:
             items: []
     DQ:
-        st_template: '{{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});'
+        st_template: |-
+            (*{{.Comment}}*)
+            {{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});
         in:
             i_xIn: address
         out: {}
@@ -62,12 +70,12 @@ function_blocks:
             {{.CdsType}}.{{.Tag}}(
             {{- range $lhs, $rhs := .In }}
                 {{- if $rhs }}
-                  {{ $lhs }} := DI.{{ $rhs }},
+                  {{ $lhs }} := {{ $rhs }},
                 {{- end }}
             {{- end }}
             {{- range $lhs, $rhs := .Out }}
                 {{- if $rhs }}
-                  {{ $lhs }} => DQ.{{ $rhs }}.i_xIn,
+                  {{ $lhs }} => {{ $rhs }}.i_xIn,
                 {{- end }}
             {{- end }}
             );
@@ -173,12 +181,12 @@ function_blocks:
             {{.CdsType}}.{{.Tag}}(
             {{- range $lhs, $rhs := .In }}
                 {{- if $rhs }}
-                  {{ $lhs }} := DI.{{ $rhs }}.q_xValue,
+                  {{ $lhs }} := {{ $rhs }}.q_xValue,
                 {{- end }}
             {{- end }}
             {{- range $lhs, $rhs := .Out }}
                 {{- if $rhs }}
-                  {{ $lhs }} => DQ.{{ $rhs }}.i_xIn,
+                  {{ $lhs }} => {{ $rhs }}.i_xIn,
                 {{- end }}
             {{- end }}
             );

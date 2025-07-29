@@ -20,7 +20,7 @@ func (s *SyncService) GetProductDetails(id string) (gin.H, error) {
 func (s *SyncService) loadProductsFromSheets(ctx context.Context) ([]models.Product, error) {
 	var sheetProducts []models.SheetProduct
 
-	if err := s.gsheets.Load(config.Cfg.SpreadsheetID, config.Cfg.ProductSheet, &sheetProducts); err != nil {
+	if err := s.gsRead.Load(config.Cfg.SpreadsheetID, config.Cfg.ProductSheet, &sheetProducts); err != nil {
 		return nil, fmt.Errorf("failed to load products: %w", err)
 	}
 

@@ -67,14 +67,14 @@ type AppConfig struct {
 	AddressTemplate map[string]string   `yaml:"address_template"`
 }
 
-func CreateDefaultConfigIfNotExist() error {
-	if _, err := os.Stat("config.yaml"); os.IsNotExist(err) {
+func CreateDefaultConfigIfNotExist(filename string) error {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		newCfg := AppConfig{}
 		data, err := yaml.Marshal(&newCfg)
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile("config.yaml", data, 0644); err != nil {
+		if err := os.WriteFile(filename, data, 0644); err != nil {
 			return err
 		}
 		return nil

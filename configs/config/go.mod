@@ -2,10 +2,10 @@ module github.com/mejzh77/astragen/configs/config
 
 go 1.24.4
 
-replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
+//replace github.com/mejzh77/astragen/pkg/models => ../../pkg/models
 
 require (
-	github.com/mejzh77/astragen/pkg/models v0.0.0-00010101000000-000000000000
+	github.com/mejzh77/astragen/pkg/models v0.0.0-20250728092642-dc3364e323eb
 	gopkg.in/yaml.v3 v3.0.1
 )
 

@@ -41,6 +41,7 @@ func (s *SyncService) LinkSignalsWithFuzzyMatching(signals []models.Signal) erro
 		}
 
 		signals[i].NodeID = &node.ID
+		signals[i].NodeRef = node.Name
 	}
 
 	return s.signalRepo.UpdateSignalNodes(signals)
@@ -55,7 +56,7 @@ func (s *SyncService) loadSignalsFromSheets(ctx context.Context) ([]models.Signa
 			return nil, fmt.Errorf("failed to GetRange for sheet %s: %w", sheetCfg.SheetName, err)
 		}
 
-		rows, err := s.gsheets.ReadSheet(config.Cfg.SpreadsheetID, readRange)
+		rows, err := s.gsRead.ReadSheet(config.Cfg.SpreadsheetID, readRange)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read sheet %s: %w", sheetCfg.SheetName, err)
 		}
