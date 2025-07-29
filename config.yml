@@ -20,7 +20,7 @@ function_blocks:
     AI:
         st_template: |-
             (*{{.Comment}}*)
-            {{.CdsType}}.{{.Tag}}({{.In.address}} := {{.Address}});
+            {{.CdsType}}.{{.Tag}}({{.In.address}} := MODULE_{{.Address}});
         in:
             i_rIn: address
         out: {}

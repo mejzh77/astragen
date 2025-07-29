@@ -8,6 +8,13 @@ require (
 )
 
 require (
+	github.com/mejzh77/astragen/configs/config v0.0.0-20250729085150-9d43c23bb774
+	github.com/mejzh77/astragen/internal/api v0.0.0-20250729085150-9d43c23bb774
+	github.com/mejzh77/astragen/internal/database v0.0.0-20250729085150-9d43c23bb774
+	github.com/mejzh77/astragen/internal/sync v0.0.0-20250729085150-9d43c23bb774
+)
+
+require (
 	cloud.google.com/go/auth v0.16.3 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
@@ -39,6 +46,9 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mejzh77/astragen/internal/gsheets v0.0.0-20250729085150-9d43c23bb774 // indirect
+	github.com/mejzh77/astragen/internal/repository v0.0.0-20250729085150-9d43c23bb774 // indirect
+	github.com/mejzh77/astragen/pkg/models v0.0.0-20250729085150-9d43c23bb774 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
